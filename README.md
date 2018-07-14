@@ -12,3 +12,7 @@ version 0.2.1 (14.07.2018)
 	- Application prints version on start.
 	- Show an image of a red/blue football player at the ball's location at the start of each move.
 	- The ball now slowly transitions from it's current to the chosen position during a move.
+	
+version 0.2.2 (14.07.2018)
+
+	- Fixed a bug where human player choking would reset the game like it should, but not count it towards the opposing player's score

@@ -18,11 +18,11 @@ import player.Player;
  * Main class. JavaFX {@link Application}
  * @author Michał Lipiński
  * @date 10.04.2017
- * @updated 14.07.2018 version 0.2.1
+ * @updated 14.07.2018 version 0.2.2
  */
 public class PaperFootball extends Application {
 	
-	public static final String _VERSION = "version 0.2.1";
+	public static final String _VERSION = "version 0.2.2";
 
 	//______________________Graphical Constants______________________
 	public static final double POINT_RADIUS = 5.0;
@@ -183,7 +183,7 @@ public class PaperFootball extends Application {
 	public void choke() {
 		
 		//other player scores
-		player(player_turn % 2 + 1).setScore(player(player_turn).score() + 1);
+		player(player_turn % 2 + 1).setScore(player(player_turn % 2 + 1).score() + 1);
 		
 		
 		//reset the field + next turn
