@@ -1,15 +1,26 @@
 package model;
 
+/**
+ * Model representing a simple clickable Point on the playing field.
+ * @author Michał Lipiński
+ * @date 10.04.2017
+ * @updated 14.07.2018 version 0.2
+ */
 public class PointModel {
 
-	private int x;
-	private int y;
+	/** the x coordinate of this PointModel on the playing field (0 - 8) */
+	private final int x;
+	/** the y coordinate of this PointModel on the playing Field (0 - 12) */
+	private final int y;
 	
-	private boolean empty;
-	private boolean active;
-	
+	/** is this PointModel still unused - does moving to this PointModel end a player's turn */
+	private boolean unused;
+	/** is this PointModel the current location of the ball. */
+	private boolean isBall;
+	/** is this PointModel at the center of the back of the goal - the point a player has to reach to score a goal - basically shortcut for x == 4 && (y == 0 || y == 12)*/
 	private boolean isGoal;
 	
+	//LineModels connecting this PointModel to PointModels in each direction.
 	private LineModel north;
 	private LineModel northWest;
 	private LineModel west;
@@ -28,60 +39,60 @@ public class PointModel {
 	public PointModel(int x, int y) {
 		this.x = x;
 		this.y = y;
-		empty = true;
-		active = false;
+		unused = true;
+		isBall = false;
 		
 		isGoal = false;
 	}
 	
 	/**
-	 * copy constructor. After copying you need to call newCopy.connectLinesAfterCopying(toCopy)
-	 * @param toCopy PointModel to be copied
+	 * copy constructor. After copying you need to call copy.connectLinesAfterCopying(original)
+	 * @param original PointModel to be copied
 	 */
-	public PointModel(PointModel toCopy) {
+	public PointModel(PointModel original) {
 		
-		this.x = toCopy.x();
-		this.y = toCopy.y();
-		empty = toCopy.empty();
-		active = toCopy.active();
+		this.x = original.x();
+		this.y = original.y();
+		unused = original.unused();
+		isBall = original.isBall();
 		
 		isGoal = false;
 	}
 	
 	/**
 	 * Copy the lines connected to this point from the given PointModel
-	 * @param toCopy
+	 * @param original PointModel we want to copy the connections from
 	 */
-	public void connectLinesAfterCopying(PointModel toCopy) {
+	public void connectLinesAfterCopying(PointModel original) {
 		
-		if(toCopy.north != null) north = new LineModel(toCopy.north);
-		if(toCopy.northWest != null) northWest = new LineModel(toCopy.northWest);
-		if(toCopy.west != null) west = new LineModel(toCopy.west);
-		if(toCopy.southWest != null) southWest = new LineModel(toCopy.southWest);
-		if(toCopy.south != null) south = new LineModel(toCopy.south);
-		if(toCopy.southEast != null) southEast = new LineModel(toCopy.southEast);
-		if(toCopy.east != null) east = new LineModel(toCopy.east);
-		if(toCopy.northEast != null) northEast = new LineModel(toCopy.northEast);
+		if(original.north != null) north = new LineModel(original.north);
+		if(original.northWest != null) northWest = new LineModel(original.northWest);
+		if(original.west != null) west = new LineModel(original.west);
+		if(original.southWest != null) southWest = new LineModel(original.southWest);
+		if(original.south != null) south = new LineModel(original.south);
+		if(original.southEast != null) southEast = new LineModel(original.southEast);
+		if(original.east != null) east = new LineModel(original.east);
+		if(original.northEast != null) northEast = new LineModel(original.northEast);
 	}
 	
 	/**
 	 * @return <code>true</code> if this is an empty/unused point
 	 */
-	public boolean empty() {return empty;}
+	public boolean unused() {return unused;}
 	/**
 	 * set this point as used/not empty
 	 */
-	public void put() { empty = false;}
+	public void put() { unused = false;}
 	
 	/**
-	 * @return <code>true</code> if this is the currently active point (the starting point of the next move)
+	 * @return <code>true</code> if this is the currently active point (the starting point of the next move a.k.a. "where the ball is")
 	 */
-	public boolean active() {return active;}
+	public boolean isBall() {return isBall;}
 	/**
 	 * set this point as active (the starting point of the next move)
 	 * @param b
 	 */
-	public void setActive(boolean b) {active = b;}
+	public void setIsBall(boolean b) {isBall = b;}
 	/**
 	 * @return the x coordinate of this PointModel
 	 */
@@ -218,12 +229,53 @@ public class PointModel {
 	/**
 	 * @return number of lines connected to this PointModel that are still empty
 	 */
-	public int possibleMoves() {
+	public int possibleMovesAmount() {
 		int options = 0;
 		for(Dir dir : Dir.values()) {
-			if(getLine(dir) != null && getLine(dir).empty()) options++;
+			if(getLine(dir) != null && getLine(dir).unused()) options++;
 		}
 		return options;
+	}
+	
+	
+	/**
+	 * @return an array of "unused" LineModel representing possible moves starting from this PointModel
+	 */
+	public LineModel[] possibleMoves() {
+		LineModel[] moves = new LineModel[possibleMovesAmount()];
+		
+		int counter = 0;
+		for(Dir dir : Dir.values()) {
+
+			if(getLine(dir) != null && getLine(dir).unused()) {
+				moves[counter] = getLine(dir);
+				counter++;
+			}
+		}
+		return moves;
+	}
+	
+	/**
+	 * @return An array of PointModels connected by unused LineModels, a.k.a. "Points the player can click on next".
+	 */
+	public PointModel[] reachablePoints() {
+		//get the list of possible moves...
+		LineModel[] possibleMoves = possibleMoves();
+		
+		//... and create an array of reachable PointModels with the same length
+		PointModel[] points = new PointModel[possibleMoves.length];
+		
+		int counter = 0;
+		for(LineModel move : possibleMoves) {
+			
+			//check if this PointModel is this LineModel's "from" and if yes add it's "to" to available points, otherwise add it's "from".
+			points[counter] = move.from().equals(this) ? move.to() : move.from();
+			counter++;
+			
+		}
+
+		return points;
+		
 	}
 	
 	

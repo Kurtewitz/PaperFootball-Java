@@ -2,10 +2,18 @@ package model;
 
 import java.util.ArrayList;
 
+/**
+ * The main Model of the game. Stores the playing field.
+ * @author Michał Lipiński
+ * @date 10.04.2017
+ * @updated 14.07.2018 version 0.2
+ */
 public class Model {
 
-	private PointModel[][] points;
-	private ArrayList<LineModel> lines;
+	/** two-dimensional array of PointModels representing the playing field (the entire 8 * 12 field) */
+	private final PointModel[][] points;
+	/** ArrayList of all LineModels - all the connections between the Points on the field. */
+	private final ArrayList<LineModel> lines;
 	
 	
 	public Model() {
@@ -67,32 +75,32 @@ public class Model {
 					PointModel from = getPoint(x, y);
 					PointModel to = getPoint(x - 1, y);
 					
-					left = new LineModel(from, to, !( from.empty() || to.empty() ) );
-					if(exceptions.contains(left)) left.setEmpty(true);
+					left = new LineModel(from, to, !( from.unused() || to.unused() ) );
+					if(exceptions.contains(left)) left.setUnused(true);
 				}
 				//check if leftDown exists
 				if(x > 0 && y < (points.length - 1)) {
 					PointModel from = getPoint(x, y);
 					PointModel to = getPoint(x - 1, y + 1);
 					
-					leftDown = new LineModel(from, to, !(from.empty() || to.empty()));
-					if(exceptions.contains(leftDown)) leftDown.setEmpty(true);
+					leftDown = new LineModel(from, to, !(from.unused() || to.unused()));
+					if(exceptions.contains(leftDown)) leftDown.setUnused(true);
 				}
 				//check if down exists
 				if(y < (points.length - 1)) {
 					PointModel from = getPoint(x, y);
 					PointModel to = getPoint(x, y + 1);
 					
-					down = new LineModel(from, to, !(from.empty() || to.empty()));
-					if(exceptions.contains(down)) down.setEmpty(true);
+					down = new LineModel(from, to, !(from.unused() || to.unused()));
+					if(exceptions.contains(down)) down.setUnused(true);
 				}
 				//check if downRight exists
 				if(x < (points[0].length - 1) && y < (points.length - 1)) {
 					PointModel from = getPoint(x, y);
 					PointModel to = getPoint(x + 1, y + 1);
 					
-					downRight = new LineModel(from, to, !(from.empty() || to.empty()));
-					if(exceptions.contains(downRight)) downRight.setEmpty(true);
+					downRight = new LineModel(from, to, !(from.unused() || to.unused()));
+					if(exceptions.contains(downRight)) downRight.setUnused(true);
 				}
 				
 				if(left != null) lines.add(left);
@@ -164,10 +172,10 @@ public class Model {
 			}
 			
 			//set the back of the goal to be edge
-			getLine(3, 0, 4, 0).setEmpty(false);
-			getLine(4, 0, 5, 0).setEmpty(false);
-			getLine(3, 12, 4, 12).setEmpty(false);
-			getLine(4, 12, 5, 12).setEmpty(false);
+			getLine(3, 0, 4, 0).setUnused(false);
+			getLine(4, 0, 5, 0).setUnused(false);
+			getLine(3, 12, 4, 12).setUnused(false);
+			getLine(4, 12, 5, 12).setUnused(false);
 			
 		}
 		
@@ -177,8 +185,8 @@ public class Model {
 	
 	/**
 	 * get the PointModel at the given coordinates
-	 * @param x
-	 * @param y
+	 * @param x [0 - 8]
+	 * @param y [0 - 12]
 	 * @return PointModel with the given coordinates or <code>null</code> if incorrect coordinates
 	 */
 	public PointModel getPoint(int x, int y) {
@@ -214,11 +222,16 @@ public class Model {
 	}
 	
 	
-	
+	/**
+	 * @return a two-dimensional array of PointModels representing the playing field (the entire 8 * 12 field)
+	 */
 	public PointModel[][] points() {
 		return points;
 	}
 	
+	/**
+	 * @return an ArrayList of all LineModels connecting the Points on the field.
+	 */
 	public ArrayList<LineModel> lines() {
 		return lines;
 	}
@@ -230,7 +243,7 @@ public class Model {
 		
 		for(int y = 0; y < points.length; y++) {
 			for(int x = 0; x < points[y].length; x++) {
-				if(points[y][x].active()) return points[y][x];
+				if(points[y][x].isBall()) return points[y][x];
 			}
 		}
 		return null;

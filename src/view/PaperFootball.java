@@ -14,15 +14,20 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.Model;
 import player.Player;
-
+/**
+ * Main class. JavaFX {@link Application}
+ * @author Michał Lipiński
+ * @date 10.04.2017
+ * @updated 14.07.2018 version 0.2
+ */
 public class PaperFootball extends Application {
 
+	//______________________Graphical Constants______________________
 	public static final double POINT_RADIUS = 5.0;
 	public static final double POINT_STROKE_WIDTH = 1.5;
 	
 	
 	public static final double LINE_LENGTH = 50;
-	public static final double LINE_LENGTH_DIAGONAL = Math.sqrt(2 * LINE_LENGTH * LINE_LENGTH);
 	public static final double LINE_STROKE_WIDTH = 5;
 	
 	
@@ -32,43 +37,58 @@ public class PaperFootball extends Application {
 	public static final Color PLAYER1_COLOR = Color.ORANGERED;
 	public static final Color PLAYER2_COLOR = Color.DODGERBLUE;
 	
-	public static final Color POINT_EMPTY_COLOR = Color.LIGHTGREY;
+	public static final Color POINT_UNUSED_COLOR = Color.LIGHTGREY;
 	public static final Color POINT_USED_COLOR = Color.DIMGREY;
-	public static final Color POINT_ACTIVE_COLOR = Color.GOLDENROD;
+	public static final Color POINT_HIGHLIGHT_COLOR = Color.GOLDENROD;
 	
-	public static final double BUFFER_AROUND_FIELD = POINT_RADIUS;// / 2 + POINT_STROKE_WIDTH + 2;
+	public static final double BUFFER_AROUND_FIELD = POINT_RADIUS;
+	//____________________Graphical Constants End____________________
 	
-	public static int PLAYER_TURN = 0;
 	
+	/** Integer storing which player's turn it is (1 or 2) */
+	private int player_turn = 0;
+	
+	/** main Model for a game */
 	private Model m;
+	/** main View for a game */
 	private View v;
+	/** Menu to show at the start that let's the user chose the two player's for a game */
 	private Menu menu;
 	
+	/** Player with the number 1 */
 	private Player Player1;
+	/** Player with the number 2 */
 	private Player Player2;
 	
+	/** Stage to hold and display the graphical components of this application */
 	Stage stage;
+	
+	
 	
 	
 	public PaperFootball() {
 		
 		m = new Model();
 		
-		
 	}
 	
 	
-	
+	/**
+	 * Set the two given players as the players of this game,
+	 * create a View for this game and statr the first turn.
+	 * @brief Start the game with the two given players.
+	 * @param player1
+	 * @param player2
+	 * 
+	 */
 	public void startGame(Player player1, Player player2) {
-		
-		
 		
 		
 		Player1 = player1;//new AI(1, this);
 		Player2 = player2;//new AI(2, this);
 
 		v = new View(m, this);
-		v.start();
+		v.prepareField();
 		nextTurn();
 		
 
@@ -79,18 +99,18 @@ public class PaperFootball extends Application {
 	
 	
 	/**
-	 * calculate the next turn = update value of TURN_PLAYER, set the turn indicator
+	 * calculate the next turn = update value of turn_player, set the turn indicator
 	 * and if it's the AI's turn, calculate and animate the move
 	 */
 	public void nextTurn() {
 		
-		PLAYER_TURN = PLAYER_TURN % 2 + 1;
+		player_turn = player_turn % 2 + 1;
 		
 		//show the turn indicator at current player's side (football icon)
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				v.setTurnIndicator(PLAYER_TURN);
+				v.setTurnIndicator(player_turn);
 			}
 		});
 		
@@ -99,15 +119,15 @@ public class PaperFootball extends Application {
 		final ArrayList<int[]> turn = new ArrayList<int[]>();
 		
 		//fill the turn with current player's moves
-		if(!player(PLAYER_TURN).isHuman()) {
-			for(int[] move : player(PLAYER_TURN).doTurn()) {
+		if(!player(player_turn).isHuman()) {
+			for(int[] move : player(player_turn).doTurn()) {
 				turn.add(move);
 			}
 		}
 		
 		//check 
-		if(!player(PLAYER_TURN).isHuman() && turn.size() == 0) {
-			System.out.println("Player" + PLAYER_TURN + " chokes! Score so far " + player1().score() + " : " + player2().score());
+		if(!player(player_turn).isHuman() && turn.size() == 0) {
+			System.out.println("Player" + player_turn + " chokes! Score so far " + player1().score() + " : " + player2().score());
 			choke();
 			System.out.println("New score " + player1().score() + " : " + player2().score());
 		}
@@ -132,11 +152,11 @@ public class PaperFootball extends Application {
 	
 	
 	/**
-	 * one player scores a goal = update the player's score and reset the field
+	 * current player scores a goal = update current player's score and reset the field
 	 */
 	public void goal() {
 		
-		player(PLAYER_TURN).setScore(player(PLAYER_TURN).score() + 1);
+		player(player_turn).setScore(player(player_turn).score() + 1);
 		
 		
 		m = new Model();
@@ -146,19 +166,19 @@ public class PaperFootball extends Application {
 		
 
 		v = new View(m, this);
-		v.start();
+		v.prepareField();
 		nextTurn();
 		
 		stage.setScene(new Scene(v));
 	}
 	
 	/**
-	 * one player gets stuck and cannot perform a move = other player scores + reset the field + next turn
+	 * current player gets stuck and cannot perform a move = other player scores + reset the field + next turn
 	 */
 	public void choke() {
 		
 		//other player scores
-		player(PLAYER_TURN % 2 + 1).setScore(player(PLAYER_TURN).score() + 1);
+		player(player_turn % 2 + 1).setScore(player(player_turn).score() + 1);
 		
 		
 		//reset the field + next turn
@@ -169,20 +189,41 @@ public class PaperFootball extends Application {
 		
 
 		v = new View(m, this);
-		v.start();
+		v.prepareField();
 		nextTurn();
 		
 		stage.setScene(new Scene(v));
 		
 	}
 	
-	
+	/**
+	 * @return the main model of a game.
+	 */
 	public Model model() {
 		return m;
 	}
 	
-	public Player player1() {return Player1;}
-	public Player player2() {return Player2;}
+	/**
+	 * @return Player 1
+	 */
+	public Player player1() {
+		return Player1;
+	}
+	
+	/** 
+	 * @return Player 2
+	 */
+	public Player player2() {
+		return Player2;
+	}
+	
+	/**
+	 * @return <code>1</code> if it's Player 1's turn <br>
+	 * <code>2</code> if it's Player 2' turn.
+	 */
+	public int player_turn() {
+		return player_turn;
+	}
 	
 	/**
 	 * @param nr number of the player to be returned

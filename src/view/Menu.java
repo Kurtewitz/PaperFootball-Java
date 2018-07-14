@@ -20,25 +20,38 @@ import player.AI;
 import player.Human;
 import player.Player;
 
+/**
+ * The menu displayed at the start that lets the player select the two players for a game and the difficulty of the computer player (if selected)
+ * @author Michał Lipiński
+ * @date 14.04.2017
+ * @updated 14.07.2018 version 0.2
+ */
 public class Menu extends VBox {
 
+	/** main class */
+	private final PaperFootball main;
 	
-	PaperFootball main;
+	/** button starting a game with the chosen players */
+	private final Button start;
 	
-	Button start;
+	/** ComboBox lets you select the first player (human or computer) */
+	private final ComboBox<String> player1;
+	/** ComboBox lets you select the second player (human or computer) */
+	private final ComboBox<String> player2;
+
+	/** ComboBox lets you select the first player's difficulty (if computer player selected) */
+	private final ComboBox<String> player1Diff;
+	/** ComboBox lets you select the second player's difficulty (if computer player selected) */
+	private final ComboBox<String> player2Diff;
 	
-	ComboBox<String> player1;
-	ComboBox<String> player2;
+	//__________String Constants__________
+	private final String _HUMAN = "Human";
+	private final String _AI = "Computer";
 	
-	ComboBox<String> player1Diff;
-	ComboBox<String> player2Diff;
-	
-	String human = "Human";
-	String ai = "Computer";
-	
-	String diff1 = "Easy";
-	String diff2 = "Medium";
-	String diff3 = "Hard";
+	private final String _DIFFICULTY1 = "Easy";
+	private final String _DIFFICULTY2 = "Medium";
+	private final String _DIFFICULTY3 = "Hard";
+	//________String Constants End________
 	
 	
 	
@@ -88,7 +101,7 @@ public class Menu extends VBox {
 		player1Label.setFont(new Font(20));
 		
 		
-		player1 = new ComboBox<String>(FXCollections.observableArrayList(human, ai));
+		player1 = new ComboBox<String>(FXCollections.observableArrayList(_HUMAN, _AI));
 		player1.setPrefHeight(1 * PaperFootball.LINE_LENGTH);
 		player1.setPrefWidth(3 * PaperFootball.LINE_LENGTH);
 		player1.setButtonCell(cellFactory.call(null));
@@ -98,19 +111,19 @@ public class Menu extends VBox {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
 				
-				if(newValue.equals(human)) player1Diff.setDisable(true);
+				if(newValue.equals(_HUMAN)) player1Diff.setDisable(true);
 				else player1Diff.setDisable(false);
 			}
 		});
 		
 		
 		
-		player1Diff = new ComboBox<String>(FXCollections.observableArrayList(diff1, diff2, diff3));
+		player1Diff = new ComboBox<String>(FXCollections.observableArrayList(_DIFFICULTY1, _DIFFICULTY2, _DIFFICULTY3));
 		player1Diff.setPrefHeight(1 * PaperFootball.LINE_LENGTH);
 		player1Diff.setPrefWidth(2 * PaperFootball.LINE_LENGTH);
 		player1Diff.setButtonCell(cellFactory.call(null));
 		player1Diff.setCellFactory(cellFactory);
-		player1Diff.getSelectionModel().select(diff1);
+		player1Diff.getSelectionModel().select(_DIFFICULTY1);
 		
 		
 		Label player2Label = new Label("Choose settings for player 2");
@@ -118,7 +131,7 @@ public class Menu extends VBox {
 		player2Label.setFont(new Font(20));
 
 		
-		player2 = new ComboBox<String>(FXCollections.observableArrayList(human, ai));
+		player2 = new ComboBox<String>(FXCollections.observableArrayList(_HUMAN, _AI));
 		player2.setPrefHeight(1 * PaperFootball.LINE_LENGTH);
 		player2.setPrefWidth(3 * PaperFootball.LINE_LENGTH);
 		player2.setButtonCell(cellFactory.call(null));
@@ -128,17 +141,17 @@ public class Menu extends VBox {
 			@Override
 			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
 				
-				if(newValue.equals(human)) player2Diff.setDisable(true);
+				if(newValue.equals(_HUMAN)) player2Diff.setDisable(true);
 				else player2Diff.setDisable(false);
 			}
 		});
 		
-		player2Diff = new ComboBox<String>(FXCollections.observableArrayList(diff1, diff2, diff3));
+		player2Diff = new ComboBox<String>(FXCollections.observableArrayList(_DIFFICULTY1, _DIFFICULTY2, _DIFFICULTY3));
 		player2Diff.setPrefHeight(1 * PaperFootball.LINE_LENGTH);
 		player2Diff.setPrefWidth(2 * PaperFootball.LINE_LENGTH);
 		player2Diff.setButtonCell(cellFactory.call(null));
 		player2Diff.setCellFactory(cellFactory);
-		player2Diff.getSelectionModel().select(diff1);
+		player2Diff.getSelectionModel().select(_DIFFICULTY1);
 		
 		start = new Button("Start");
 		start.setPrefHeight(1 * PaperFootball.LINE_LENGTH);
@@ -177,8 +190,8 @@ public class Menu extends VBox {
 		getChildren().addAll(player1Label, player1Box, filler1, player2Label, player2Box, filler2, start, filler3);
 		
 
-		player1.getSelectionModel().select(human);
-		player2.getSelectionModel().select(ai);
+		player1.getSelectionModel().select(_HUMAN);
+		player2.getSelectionModel().select(_AI);
 		
 		
 	}
@@ -191,25 +204,25 @@ public class Menu extends VBox {
 		Player p1;
 		Player p2;
 		
-		if(player1.getSelectionModel().getSelectedItem().equals(human)) {
+		if(player1.getSelectionModel().getSelectedItem().equals(_HUMAN)) {
 			p1 = new Human(1, main);
 		}
 		else {
 			String difficulty = player1Diff.getSelectionModel().getSelectedItem();
 			
-			int diff = difficulty.equals(diff1) ? 1 : difficulty.equals(diff2) ? 2 : 3;
+			int diff = difficulty.equals(_DIFFICULTY1) ? 1 : difficulty.equals(_DIFFICULTY2) ? 2 : 3;
 			
 			p1 = new AI(1, diff, main);
 		}
 		
 		
-		if(player2.getSelectionModel().getSelectedItem().equals(human)) {
+		if(player2.getSelectionModel().getSelectedItem().equals(_HUMAN)) {
 			p2 = new Human(2, main);
 		}
 		else {
 			String difficulty = player2Diff.getSelectionModel().getSelectedItem();
 			
-			int diff = difficulty.equals(diff1) ? 1 : difficulty.equals(diff2) ? 2 : 3;
+			int diff = difficulty.equals(_DIFFICULTY1) ? 1 : difficulty.equals(_DIFFICULTY2) ? 2 : 3;
 			
 			p2 = new AI(2, diff, main);
 		}

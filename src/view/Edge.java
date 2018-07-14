@@ -2,10 +2,19 @@ package view;
 
 import javafx.scene.shape.Line;
 import model.LineModel;
+import model.PointModel;
 
+/**
+ * A Line connecting two points on the playing field.
+ * @author Michał Lipiński
+ * @date 10.04.2017
+ * @updated 14.07.2018 version 0.2
+ */
 public class Edge extends Line {
 
-	LineModel l;
+	/** the LineModel this Edge represents */
+	private final LineModel l;
+	
 	
 	public Edge(LineModel lm) {
 		super(PaperFootball.BUFFER_AROUND_FIELD + lm.from().x() * PaperFootball.LINE_LENGTH,
@@ -20,9 +29,8 @@ public class Edge extends Line {
 		
 		update();
 		
-		
-		
 	}
+	
 	
 	/**
 	 * @return the LineModel this Edge is a graphical representation of
@@ -34,8 +42,22 @@ public class Edge extends Line {
 	/**
 	 * @return <code>true</code> if this Edge is empty/unused
 	 */
-	public boolean empty() {
-		return l.empty();
+	public boolean unused() {
+		return l.unused();
+	}
+	
+	/**
+	 * @return PointModel representing the "from" end of this Edge.
+	 */
+	public PointModel from() {
+		return l.from();
+	}
+	
+	/**
+	 * @return PointModel representing the "to" end of this Edge.
+	 */
+	public PointModel to() {
+		return l.to();
 	}
 	
 	/**
@@ -50,10 +72,10 @@ public class Edge extends Line {
 	}
 	
 	/**
-	 * update the appearance of this Edge to reflect the state of the underlying LineModel
+	 * update the appearance of this Edge to reflect the state of the underlying LineModel. refresh.
 	 */
 	public void update() {
-		if(l.empty()) setStroke(PaperFootball.LINE_EMPTY_COLOR);
+		if(l.unused()) setStroke(PaperFootball.LINE_EMPTY_COLOR);
 		else {
 			if(l.drawnByPlayer() == 0) setStroke(PaperFootball.DEFAULT_COLOR);
 			else if(l.drawnByPlayer() == 1) setStroke(PaperFootball.PLAYER1_COLOR);

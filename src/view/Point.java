@@ -1,6 +1,7 @@
 package view;
 
 import javafx.animation.Animation;
+import javafx.animation.Animation.Status;
 import javafx.animation.FillTransition;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -8,12 +9,21 @@ import javafx.scene.shape.Circle;
 import javafx.util.Duration;
 import model.PointModel;
 
+/**
+ * Graphical representation of a simple clickable Point on the playing field or any of the clickable or nonclickable Points outlining the playing field.
+ * @author Michał Lipiński
+ * @date 10.04.2017
+ * @updated 14.07.2018 version 0.2
+ */
 public class Point extends Circle {
 
-	PointModel p;
-	View v;
+	/** PointModel this Point represents */
+	private final PointModel p;
+	/** the parent / container */
+	private final View v;
 	
-	FillTransition blink;
+	/** FillTransition responsible for the blinking animation highlighting possible moves for human players */
+	private FillTransition blink;
 	
 	/**
 	 * standard constructor for creating a Point to graphically represent a PointModel
@@ -31,11 +41,11 @@ public class Point extends Circle {
 		setStrokeWidth(PaperFootball.POINT_STROKE_WIDTH);
 		setStroke(PaperFootball.DEFAULT_COLOR);
 		
-		if(pm.empty()) setFill(PaperFootball.POINT_EMPTY_COLOR);
+		if(pm.unused()) setFill(PaperFootball.POINT_UNUSED_COLOR);
 		else setFill(PaperFootball.POINT_USED_COLOR);
 		
-		//the blinking animation on the active point
-		blink = new FillTransition(Duration.millis(500), this, PaperFootball.POINT_USED_COLOR, PaperFootball.POINT_ACTIVE_COLOR);
+		//the blinking animation used to show that this point is reachable by the player.
+		blink = new FillTransition(Duration.millis(500), this, p.unused() ? PaperFootball.POINT_UNUSED_COLOR : PaperFootball.POINT_USED_COLOR, PaperFootball.POINT_HIGHLIGHT_COLOR);
 		blink.setCycleCount(Animation.INDEFINITE);
 		blink.setAutoReverse(true);
 		
@@ -53,7 +63,7 @@ public class Point extends Circle {
 	 * Someone or something clicked on this Point -> forward the call to the main GUI class
 	 */
 	public void click() {
-		if(!p.active()) v.moveTo(this);
+		if(!p.isBall()) v.moveTo(this);
 	}
 	
 	
@@ -63,40 +73,100 @@ public class Point extends Circle {
 	public void put() {
 		p.put();
 		setFill(PaperFootball.POINT_USED_COLOR);
-		toFront();
+//		toFront();
 	}
 	
 	/**
-	 * set the <code> active</code> flag of this Point. Start or stop the blinking animation
+	 * set the <code>isBall</code> flag of this Point's PointModel. Display or hide the ball icon.
 	 * @param b
 	 */
-	public void setActive(boolean b) {
+	public void setBall(boolean b) {
 		if(b) {
-			p.setActive(true);
-			blink.play();
+			p.setIsBall(true);
+//			blink.play();
+//			showAvailableMoves();
 			toFront();
 		}
 		else {
-			p.setActive(false);
-			blink.stop();
-			if(!p.empty()) setFill(PaperFootball.POINT_USED_COLOR);
-			else setFill(PaperFootball.POINT_EMPTY_COLOR);
+			p.setIsBall(false);
+//			blink.stop();
+			if(!p.unused()) setFill(PaperFootball.POINT_USED_COLOR);
+			else setFill(PaperFootball.POINT_UNUSED_COLOR);
 			toFront();
 		}
 	}
 	
+	
+	
+	
+	
 	/**
-	 * @return <code>true</code> if this is the currently active Point (the starting point of the next move)
+	 * start the blinking animation of all the reachable points (the points the player can click on next).
 	 */
-	public boolean active() {
-		return p.active();
+	public void showAvailableMoves() {
+		
+		PointModel[] reachablePoints = p.reachablePoints();
+		
+		for(PointModel point : reachablePoints) {
+			v.getPoint(point.x(), point.y()).startBlinking();
+		}
+		
+	}
+	
+	/**
+	 * Stop the blinking of all neighboring Points
+	 */
+	public void hideAvailableMoves() {
+		
+		for(int x = Math.max( 0, p.x() - 1 ); x <= Math.min( 8, p.x() + 1 ); x++) {
+			for(int y = Math.max( 0, p.y() - 1 ); y <= Math.min( 12, p.y() + 1 ) ; y++) {
+				
+				v.getPoint(x, y).stopBlinking();
+				
+			}
+		}
+		
+	}
+	
+	/**
+	 * start the blinking animation which is supposed to mean, that the player can currently play the ball to this Point.
+	 */
+	public void startBlinking() {
+		if(blink.getStatus() != Status.RUNNING) blink.playFromStart();
+	}
+	
+	/**
+	 * stop the blinking animation which is supposed to mean, that the player can currently play the ball to this Point.
+	 */
+	public void stopBlinking() {
+		if(blink.getStatus() == Status.RUNNING || blink.getStatus() == Status.PAUSED) {
+			blink.stop();
+			
+			//the blinking animation used to show that this point is reachable by the player.
+			blink = new FillTransition(Duration.millis(500), this, p.unused() ? PaperFootball.POINT_UNUSED_COLOR : PaperFootball.POINT_USED_COLOR, PaperFootball.POINT_HIGHLIGHT_COLOR);
+			blink.setCycleCount(Animation.INDEFINITE);
+			blink.setAutoReverse(true);
+			
+			if(unused()) setFill(PaperFootball.POINT_UNUSED_COLOR);
+			else setFill(PaperFootball.POINT_USED_COLOR);
+			
+			
+			
+		}
+	}
+	
+	/**
+	 * @return <code>true</code> if this is the currently active Point (the starting point of the next move a.k.a. "where the ball is")
+	 */
+	public boolean isBall() {
+		return p.isBall();
 	}
 	
 	/**
 	 * @return <code>true</code> if this is an empty/unused Point
 	 */
-	public boolean empty() {
-		return p.empty();
+	public boolean unused() {
+		return p.unused();
 	}
 	
 	/**
@@ -106,7 +176,33 @@ public class Point extends Circle {
 		return p;
 	}
 	
+	/**
+	 * @return an array of PointModels representing points reachable from this Point.
+	 */
+	public PointModel[] reachablePointModels() {
+		return p.reachablePoints();
+	}
 	
+	/**
+	 * @return An array of Points reachable from this Point.
+	 */
+	public Point[] reachablePoints() {
+		Point[] points = new Point[reachablePointModels().length];
+		
+		int counter = 0;
+		for(PointModel pm : reachablePointModels()) {
+			points[counter] = v.getPoint(pm.x(), pm.y());
+			
+			counter++;
+		}
+		
+		return points;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		return o instanceof Point && ((Point) o).pointModel().equals(this.pointModel());
+	}
 	
 	
 }

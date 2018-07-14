@@ -15,23 +15,41 @@ import javafx.scene.text.Font;
 import javafx.util.Duration;
 import model.LineModel;
 import model.Model;
-
+import player.Human;
+/**
+ * The main view class.
+ * @author Michał Lipiński
+ * @date 10.04.2017
+ * @updated 14.07.2018 version 0.2
+ */
 public class View extends Group {
 
-	private PaperFootball main;
+	/** the main class */
+	private final PaperFootball main;
 	
-	private Point[][] points;
-	private ArrayList<Edge> lines;
+	/** two-dimensional array of Points representing the playing field (the entire 8 * 12 field) */
+	private final Point[][] points;
+	/** ArrayList of all Edges - all the connections between the Points on the field. */
+	private final ArrayList<Edge> lines;
 	
+	/** amount of goals player 1 has scored */
+	private final Label player1_score;
+	/** amount of goals player 2 has scored */
+	private final Label player2_score;
 	
-	private Label player1_score;
-	private Label player2_score;
+	/** Label next to player 1's goal for displaying the Football icon to show it's player 1's turn */
+	private final Label player1_turn;
+	/** Label next to player 2's goal for displaying the Football icon to show it's player 2's turn */
+	private final Label player2_turn;
 	
-	private Label player1_turn;
-	private Label player2_turn;
+	/** Image of a football used for indicating whose turn it is */
+	private final ImageView ball_turn;
+	/** Image of a football used to show to position of the ball in the game */
+	private final ImageView ball_game;
 	
-	private ImageView ball;
-	RotateTransition rotateBall;
+	/** RotateTransition responsible for rotation of the turn-indicating football image */
+	private final RotateTransition rotateBall;
+	
 	
 	public View(Model m, PaperFootball pf) {
 		super();
@@ -39,13 +57,18 @@ public class View extends Group {
 		main = pf;
 		points = new Point[m.points().length][m.points()[0].length];
 		
-		ball = new ImageView(
+		ball_turn = new ImageView(
 				new Image(
 						View.class.getResourceAsStream("/ball.png"), 8 * PaperFootball.LINE_LENGTH / 10, 8 * PaperFootball.LINE_LENGTH / 10, true, true
 						)
 				);
+		ball_game = new ImageView(
+				new Image(
+						View.class.getResourceAsStream("/ball.png"), 5 * PaperFootball.POINT_RADIUS, 5 * PaperFootball.POINT_RADIUS, true, true
+						)
+				);
 		
-		rotateBall = new RotateTransition(Duration.millis(500), ball);
+		rotateBall = new RotateTransition(Duration.millis(500), ball_turn);
 		rotateBall.setByAngle(360);
 		rotateBall.setRate(0.5);
 		rotateBall.setCycleCount(Animation.INDEFINITE);
@@ -70,7 +93,7 @@ public class View extends Group {
 		}
 		
 		
-		
+		//Mark each Player's goal with their color.
 		Rectangle player1_goal = new Rectangle(PaperFootball.BUFFER_AROUND_FIELD + 3 * PaperFootball.LINE_LENGTH + PaperFootball.LINE_STROKE_WIDTH / 2,
 				PaperFootball.BUFFER_AROUND_FIELD + PaperFootball.LINE_STROKE_WIDTH / 2,
 				2 * PaperFootball.LINE_LENGTH - PaperFootball.LINE_STROKE_WIDTH,
@@ -86,7 +109,7 @@ public class View extends Group {
 		getChildren().addAll(player1_goal, player2_goal);
 		
 		
-		
+		//score display for player 1
 		player1_score = new Label("Score: " + main.player1().score());
 		player1_score.setOpacity(1.0);
 		player1_score.setStyle("-fx-background-color: limegreen");
@@ -100,7 +123,7 @@ public class View extends Group {
 		player1_score.setFont(new Font(20.0));
 		
 		
-
+		//score display for player 2
 		player2_score = new Label("Score: " + main.player2().score());
 		player2_score.setOpacity(1.0);
 		player2_score.setStyle("-fx-background-color: limegreen");
@@ -114,7 +137,7 @@ public class View extends Group {
 		player2_score.setFont(new Font(20.0));
 		
 		
-		
+		//space for the player1-turn-indicator (rotating football) 
 		player1_turn = new Label();
 		player1_turn.setOpacity(1.0);
 		player1_turn.setStyle("-fx-background-color: limegreen");
@@ -125,7 +148,9 @@ public class View extends Group {
 		player1_turn.setTranslateY(PaperFootball.BUFFER_AROUND_FIELD + PaperFootball.LINE_STROKE_WIDTH/2);
 		
 		player1_turn.setAlignment(Pos.CENTER);
+
 		
+		//space for the player2-turn-indicator (rotating football) 
 		player2_turn = new Label();
 		player2_turn.setOpacity(1.0);
 		player2_turn.setStyle("-fx-background-color: limegreen");
@@ -138,7 +163,7 @@ public class View extends Group {
 		player2_turn.setAlignment(Pos.CENTER);
 		
 		
-		getChildren().addAll(player1_score, player1_turn, player2_score, player2_turn);
+		getChildren().addAll(player1_score, player1_turn, player2_score, player2_turn, ball_game);
 		
 		
 		for(int y = 0; y < points.length; y++) {
@@ -160,7 +185,7 @@ public class View extends Group {
 		if(playerNr == 1) {
 			
 			rotateBall.stop();
-			player1_turn.setGraphic(ball);
+			player1_turn.setGraphic(ball_turn);
 			player2_turn.setGraphic(null);
 			rotateBall.play();
 			
@@ -169,19 +194,19 @@ public class View extends Group {
 			
 			rotateBall.stop();
 			player1_turn.setGraphic(null);
-			player2_turn.setGraphic(ball);
+			player2_turn.setGraphic(ball_turn);
 			rotateBall.play();
 		}
 		
 	}
 	
 	/**
-	 * @return the currently active Point (starting point for the next move)
+	 * @return the current location of the ball (starting Point for the next move)
 	 */
-	public Point activePoint() {
+	public Point ball() {
 		for(int y = 0; y < points.length; y++) {
 			for(int x = 0; x < points[y].length; x++) {
-				if(points[y][x].active()) return points[y][x];
+				if(points[y][x].isBall()) return points[y][x];
 			}
 		}
 		return null;
@@ -197,46 +222,72 @@ public class View extends Group {
 	 */
 	public void moveTo(Point p) {
 		
-		Point active = activePoint();
+		Point ball = ball();
 		
-		Edge e = new Edge(new LineModel(active.p, p.pointModel()));
-		
-		for(Edge edge : lines) {
-			//there exists a direct connection between active and p
-			if(edge.equals(e)) {
-				//valid move
-				if(edge.empty()) {
+		//if one of the Points reachable from the current location of the ball equals the point we want to move to.
+		for(Point reachablePoint : ball.reachablePoints()) {
+			if(reachablePoint.equals(p)) {
+				//
+				Edge edge = getEdge(ball, reachablePoint);
+				
+				edge.draw(main.player_turn());
+
+				ball.hideAvailableMoves();
+				ball.setBall(false);
+				
+				//set the Point p as the ball...
+				p.setBall(true);
+				//...and move the ball icon to p's position.
+				ball_game.setX(p.getCenterX() - 2.5 * PaperFootball.POINT_RADIUS);
+				ball_game.setY(p.getCenterY() - 2.5 * PaperFootball.POINT_RADIUS);
+				ball_game.toFront();
+				
+				//move ends at an unused point -> turn ends.
+				if(p.unused()) {
 					
-					edge.draw(PaperFootball.PLAYER_TURN);
-					active.setActive(false);
-					p.setActive(true);
+					p.put();
+					p.toFront();
 					
 					
-					//check if turn over
-					if(p.empty()) {
-						
-						p.put();
-						
-						//goal
-						if(p.pointModel().isGoal()) {
-							main.goal();
-						}
-						
-						//next turn
-						else {
-							Thread t = new Thread(new Runnable() {
-								
-								@Override
-								public void run() {
-									main.nextTurn();
-								}
-							});
-							t.start();
-						}
+					ball_game.toFront();
+					
+					//goal
+					if(p.pointModel().isGoal()) {
+						main.goal();
 					}
+					
+					//next turn
+					else {
+						Thread t = new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								main.nextTurn();
+							}
+						});
+						t.start();
+					}
+					
+					//if the next player is human, display available moves by letting the Points blink.
+					boolean nextPlayerIsHuman = main.player(main.player_turn() % 2 + 1) instanceof Human; 
+					if(nextPlayerIsHuman) p.showAvailableMoves();
+					
+					
+				}
+				//move ends on a used Point -> turn continues or choke.
+				else {
+					//if the current player is human, show available moves by letting the Points blink.
+					boolean currentPlayerIsHuman = main.player(main.player_turn()) instanceof Human; 
+					if(currentPlayerIsHuman) p.showAvailableMoves();
+					
+				}
+				//check if human player chocked (is unable to finish his turn)
+				if(p.reachablePointModels().length == 0) {
+					main.choke();
 				}
 				
 				
+				return;
 			}
 		}
 		
@@ -256,14 +307,47 @@ public class View extends Group {
 	/**
 	 * set the center point as active and the turn indicator to reflect current player's turn
 	 */
-	public void start() {
+	public void prepareField() {
 		
 		Point center = getPoint(points[0].length / 2, points.length / 2);
 		
 		center.put();
-		center.setActive(true);
+		center.setBall(true);
 		
-		setTurnIndicator(PaperFootball.PLAYER_TURN);
+		ball_game.setX(center.getCenterX() - 2.5 * PaperFootball.POINT_RADIUS);
+		ball_game.setY(center.getCenterY() - 2.5 * PaperFootball.POINT_RADIUS);
+		
+		ball_game.setVisible(true);
+		ball_game.toFront();
+		
+		//if the starting player is human show available Moves.
+		boolean startingPlayerIsHuman = (main.player(1) instanceof Human); 
+		if(startingPlayerIsHuman) center.showAvailableMoves();
+		
+	}
+	
+	/**
+	 * @return PaperFootball. Main Class.
+	 */
+	public PaperFootball main() {
+		return main;
+	}
+	
+	/**
+	 * Get the Edge between two given Points.
+	 * It returns the Edge created at initiation, which may have inverted "from" and "to" ends.
+	 * @param from first ending Point of the searched Edge.
+	 * @param to second ending Point of the searched Edge.
+	 * @return Edge
+	 */
+	public Edge getEdge(Point from, Point to) {
+		
+		Edge edgeCmp = new Edge(new LineModel(from.pointModel(), to.pointModel()));
+		
+		for(Edge edge : lines) {
+			if(edge.equals(edgeCmp)) return edge;
+		}
+		return null;
 	}
 	
 	

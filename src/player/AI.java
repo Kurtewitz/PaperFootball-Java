@@ -9,12 +9,21 @@ import model.PointModel;
 import model.PointModel.Dir;
 import view.PaperFootball;
 
+/**
+ * Computer player.
+ * For implementing a bot, check the doTurn() method
+ * @author Michał Lipiński
+ * @date 14.04.2017
+ * @updated 14.07.2018 version 0.2
+ */
 public class AI extends Player {
 	
 
-	ArrayList<Turn> possibleTurns;
+	/** ArrayList of Turns for holding all the possible Turns the AI player has available to him at a given time */
+	private ArrayList<Turn> possibleTurns;
 	
-	int difficulty;
+	/** difficulty rating of this bot */
+	private int difficulty;
 	
 	
 	public AI(int nr, int difficulty, PaperFootball main) {
@@ -66,7 +75,7 @@ public class AI extends Player {
 			LineModel l = recursionStart.getLine(dir);
 			
 			//if l exists, is empty and not used in this turn so far
-			if(l != null && l.empty() && !previousMoves.contains(l)) {
+			if(l != null && l.unused() && !previousMoves.contains(l)) {
 				
 				//copy the lines we took so far, so we can pass them on
 				ArrayList<LineModel> moves = new ArrayList<LineModel>();
@@ -86,7 +95,7 @@ public class AI extends Player {
 				if(l.from().equals(recursionStart)) {
 					
 					//... to an empty point, we found a valid, complete turn...
-					if(l.to().empty()) {
+					if(l.to().unused()) {
 						//... and "moves" contains all the lines for this turn, so we convert it into a Turn
 						possibleTurns.add(convertToTurn(startOfMove, moves));
 					}
@@ -101,7 +110,7 @@ public class AI extends Player {
 				else if(l.to().equals(recursionStart)) {
 					
 					//... from an empty point, we found a valid, complete turn...
-					if(l.from().empty()) {
+					if(l.from().unused()) {
 						//... and "moves" contains all the lines for this turn, so we convert it into a Turn
 						possibleTurns.add(convertToTurn(startOfMove, moves));
 					}
@@ -130,7 +139,7 @@ public class AI extends Player {
 			for(int y = points.length - 1; y >= 0; y--) {
 				for(int x = 0; x < points[y].length; x++) {
 					
-					if(points[y][x].empty() && reachable(points[y][x], new ArrayList<LineModel>())) {
+					if(points[y][x].unused() && reachable(points[y][x], new ArrayList<LineModel>())) {
 						
 						possibleTurns.add(findWay(points[y][x], new ArrayList<LineModel>()));
 					}
@@ -143,7 +152,7 @@ public class AI extends Player {
 			for(int y = 0; y < points.length; y++) {
 				for(int x = 0; x < points[y].length; x++) {
 					
-					if(points[y][x].empty() && reachable(points[y][x], new ArrayList<LineModel>())) {
+					if(points[y][x].unused() && reachable(points[y][x], new ArrayList<LineModel>())) {
 						
 						possibleTurns.add(findWay(points[y][x], new ArrayList<LineModel>()));
 					}
@@ -158,7 +167,7 @@ public class AI extends Player {
 	public boolean reachable(PointModel goal, ArrayList<LineModel> exclude) {
 
 		if(goal.equals(model.activePoint())) return false;
-		int options = goal.possibleMoves();
+		int options = goal.possibleMovesAmount();
 		if (options > 0) {
 			
 			boolean foundWay = false;
@@ -168,10 +177,10 @@ public class AI extends Player {
 				LineModel l = goal.getLine(dir);
 				
 				
-				if(l == null || !l.empty() || exclude.contains(l)) continue;
+				if(l == null || !l.unused() || exclude.contains(l)) continue;
 				
 				//check if l connects goal with a non-empty point
-				if( ( goal.equals(l.from()) && !l.to().empty() ) || ( goal.equals(l.to()) && !l.from().empty() ) ) {
+				if( ( goal.equals(l.from()) && !l.to().unused() ) || ( goal.equals(l.to()) && !l.from().unused() ) ) {
 				
 					//check if the non-empty point is the active point (direct connection between goal and active point)
 					if(l.to().equals(model.activePoint()) || l.from().equals(model.activePoint())) {
@@ -227,10 +236,10 @@ public class AI extends Player {
 			
 			
 			
-			if(l == null || !l.empty() || exclude.contains(l)) continue;
+			if(l == null || !l.unused() || exclude.contains(l)) continue;
 			
 			//check if l connects goal with a non-empty point
-			if( ( l.from().equals(goal) && !l.to().empty() ) || ( l.to().equals(goal) && !l.from().empty() ) ) {
+			if( ( l.from().equals(goal) && !l.to().unused() ) || ( l.to().equals(goal) && !l.from().unused() ) ) {
 				
 				//direct connection from active point to goal
 				if(l.from().equals(model.activePoint())) {
@@ -439,12 +448,20 @@ public class AI extends Player {
 		
 	}
 	
-	private class Turn   {
+	/**
+	 * This class is mostly a wrapper for a list of {@link Move}s representing a player's turn.
+	 * @author Michal
+	 *
+	 */
+	private class Turn {
 		
-		Model m;
-		Player p;
+		/** Model used for checking the validity of moves */
+		private Model m;
+		/** Player making this turn. */
+		private Player p;
 		
-		ArrayList<Move> moves;
+		/** List of Moves */
+		private ArrayList<Move> moves;
 		
 		
 		Turn(Player p, Model m) {
@@ -454,10 +471,15 @@ public class AI extends Player {
 			moves = new ArrayList<Move>();
 		}
 		
-		
+		/**
+		 * Add a Move to this Turn
+		 * @param move Move to be added to the list of Moves for this Turn.
+		 * @return <code>true<code> if the Move has been successfully added, <br>
+		 * <code>false</code> otherwise
+		 */
 		public boolean addMove(Move move) {
 			LineModel l = m.getLine(move.getFromX(), move.getFromY(), move.getToX(), move.getToY());
-			if(l.empty()) {
+			if(l.unused()) {
 				moves.add(move);
 				
 				return true;
@@ -465,6 +487,9 @@ public class AI extends Player {
 			else return false;
 		}
 		
+		/**
+		 * @return the last Move of this Turn
+		 */
 		public Move lastMove() {
 			return moves.get(moves.size() - 1);
 		}
@@ -477,17 +502,19 @@ public class AI extends Player {
 			
 		}
 
-
 //		@Override
 //		public int compareTo(Turn t) {
 //			return p.nr() == 1 ? lastMove().getToY() - t.lastMove().getToY() : t.lastMove().getToY() - lastMove().getToY();
 //		}
 		
 		
-		
-		
 	}
 	
+	/**
+	 * Class for storing a simple move from one Point to another. One ore more Moves make up a {@link Turn}
+	 * @author Michal
+	 *
+	 */
 	private class Move {
 		
 		private int toX;
