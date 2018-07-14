@@ -18,9 +18,11 @@ import player.Player;
  * Main class. JavaFX {@link Application}
  * @author Michał Lipiński
  * @date 10.04.2017
- * @updated 14.07.2018 version 0.2
+ * @updated 14.07.2018 version 0.2.1
  */
 public class PaperFootball extends Application {
+	
+	public static final String _VERSION = "version 0.2.1";
 
 	//______________________Graphical Constants______________________
 	public static final double POINT_RADIUS = 5.0;
@@ -29,7 +31,6 @@ public class PaperFootball extends Application {
 	
 	public static final double LINE_LENGTH = 50;
 	public static final double LINE_STROKE_WIDTH = 5;
-	
 	
 	public static final Color DEFAULT_COLOR = Color.BLACK;
 	
@@ -41,7 +42,9 @@ public class PaperFootball extends Application {
 	public static final Color POINT_USED_COLOR = Color.DIMGREY;
 	public static final Color POINT_HIGHLIGHT_COLOR = Color.GOLDENROD;
 	
-	public static final double BUFFER_AROUND_FIELD = POINT_RADIUS;
+	public static final double BUFFER_AROUND_FIELD = 6.5;//POINT_RADIUS;
+
+	public static final double PLAYER_IMAGE_HEIGHT = 2 * LINE_LENGTH;
 	//____________________Graphical Constants End____________________
 	
 	
@@ -69,6 +72,8 @@ public class PaperFootball extends Application {
 	public PaperFootball() {
 		
 		m = new Model();
+		
+		System.out.println(_VERSION);
 		
 	}
 	

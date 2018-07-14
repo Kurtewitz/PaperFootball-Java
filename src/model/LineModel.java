@@ -15,7 +15,7 @@ public class LineModel {
 	
 	/** is this a still unused and available connection */
 	private boolean unused;
-	/** the nr of the player that drew this Line (used this line for his move) */
+	/** the number of the player that drew this Line (used this line for his move) */
 	private int drawnByPlayer;
 	
 	/**

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import javafx.animation.Animation;
 import javafx.animation.RotateTransition;
+import javafx.animation.TranslateTransition;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
@@ -15,12 +16,11 @@ import javafx.scene.text.Font;
 import javafx.util.Duration;
 import model.LineModel;
 import model.Model;
-import player.Human;
 /**
  * The main view class.
  * @author Michał Lipiński
  * @date 10.04.2017
- * @updated 14.07.2018 version 0.2
+ * @updated 14.07.2018 version 0.2.1
  */
 public class View extends Group {
 
@@ -47,6 +47,11 @@ public class View extends Group {
 	/** Image of a football used to show to position of the ball in the game */
 	private final ImageView ball_game;
 	
+	/** Image of a red football player that appears whenever Player 1 (currently "red") makes a move */
+	private final ImageView red_player;
+	/** Image of a blue football player that appears whenever Player 2 (currently "blue") makes a move */
+	private final ImageView blue_player;
+	
 	/** RotateTransition responsible for rotation of the turn-indicating football image */
 	private final RotateTransition rotateBall;
 	
@@ -54,6 +59,13 @@ public class View extends Group {
 	public View(Model m, PaperFootball pf) {
 		super();
 		
+		/*this code comes from a short time when View extended Region instead of Group
+		 * which made addin Padding easier, back when I wanted padding around the playing field.
+		this.setPrefWidth(8 * PaperFootball.LINE_LENGTH + 2 * PaperFootball.POINT_RADIUS + 2 * PaperFootball.BUFFER_AROUND_FIELD);
+		this.setPrefHeight(12 * PaperFootball.LINE_LENGTH + 2 * PaperFootball.POINT_RADIUS + 2 * PaperFootball.BUFFER_AROUND_FIELD);
+		
+		this.setPadding(new Insets(PaperFootball.BUFFER_AROUND_FIELD, PaperFootball.BUFFER_AROUND_FIELD, PaperFootball.BUFFER_AROUND_FIELD, PaperFootball.BUFFER_AROUND_FIELD));
+		*/
 		main = pf;
 		points = new Point[m.points().length][m.points()[0].length];
 		
@@ -67,6 +79,22 @@ public class View extends Group {
 						View.class.getResourceAsStream("/ball.png"), 5 * PaperFootball.POINT_RADIUS, 5 * PaperFootball.POINT_RADIUS, true, true
 						)
 				);
+		
+		//the 0.56 factor for the width comes from the fact, that the PNG has a width/height ratio of 0.56 and we want to preserve that, while making it as tall as a Line.
+		red_player = new ImageView(
+				new Image(
+						View.class.getResourceAsStream("/redplayer.png"), 0.56 * PaperFootball.PLAYER_IMAGE_HEIGHT, PaperFootball.PLAYER_IMAGE_HEIGHT, true, true
+						)
+				);
+		//the 0.82 factor for the width comes from the fact, that the PNG has a width/height ratio of 0.82 and we want to preserve that, while making it as tall as a Line.
+		blue_player = new ImageView(
+				new Image(
+						View.class.getResourceAsStream("/blueplayer.png"), 0.82 * PaperFootball.PLAYER_IMAGE_HEIGHT, PaperFootball.PLAYER_IMAGE_HEIGHT, true, true
+						)
+				);
+		
+		red_player.setVisible(false);
+		blue_player.setVisible(false);
 		
 		rotateBall = new RotateTransition(Duration.millis(500), ball_turn);
 		rotateBall.setByAngle(360);
@@ -163,7 +191,7 @@ public class View extends Group {
 		player2_turn.setAlignment(Pos.CENTER);
 		
 		
-		getChildren().addAll(player1_score, player1_turn, player2_score, player2_turn, ball_game);
+		getChildren().addAll(player1_score, player1_turn, player2_score, player2_turn, ball_game, red_player, blue_player);
 		
 		
 		for(int y = 0; y < points.length; y++) {
@@ -227,69 +255,155 @@ public class View extends Group {
 		//if one of the Points reachable from the current location of the ball equals the point we want to move to.
 		for(Point reachablePoint : ball.reachablePoints()) {
 			if(reachablePoint.equals(p)) {
-				//
+				
+				
+				//show image of red player kicking ball
+				if(main.player_turn() == 1) {
+					
+					//make sure the image lands inside the playing field since we want to avoid padding
+					//the value 0.28 comes from the width/height ratio of the original PNG of 0.56
+					//so 0.28 * height means "half of width"
+					red_player.setX(
+							Math.min(
+									getPoint(8, 0).getCenterX() - 0.56 * PaperFootball.PLAYER_IMAGE_HEIGHT,
+									Math.max(
+											PaperFootball.BUFFER_AROUND_FIELD,
+											ball.getCenterX() - 0.28 * PaperFootball.PLAYER_IMAGE_HEIGHT //<- this is the value we possibly have to adjust, hence min max
+									)
+							)
+					);
+					red_player.setY(
+							Math.min(
+									getPoint(4, 11).getCenterY() - PaperFootball.PLAYER_IMAGE_HEIGHT,
+									Math.max(
+											PaperFootball.BUFFER_AROUND_FIELD,
+											ball.getCenterY() - PaperFootball.PLAYER_IMAGE_HEIGHT //<- this is the value we possibly have to adjust, hence min max
+									)
+							)
+					);
+					red_player.toFront();
+					red_player.setVisible(true);
+					
+				}
+				
+				//show image of blue player kicking ball
+				if(main.player_turn() == 2) {
+
+					//make sure the image lands inside the playing field since we want to avoid padding
+					blue_player.setX(
+							Math.min(
+									getPoint(8, 0).getCenterX() - 0.82 * PaperFootball.PLAYER_IMAGE_HEIGHT,
+									Math.max(
+											PaperFootball.BUFFER_AROUND_FIELD,
+											ball.getCenterX() - 0.82 * PaperFootball.PLAYER_IMAGE_HEIGHT / 2 //<- this is the value we possibly have to adjust, hence min max
+									)
+							)
+					);
+					blue_player.setY(
+							Math.min(
+									getPoint(4, 11).getCenterY() - PaperFootball.PLAYER_IMAGE_HEIGHT,
+									Math.max(
+											PaperFootball.BUFFER_AROUND_FIELD,
+											ball.getCenterY() - PaperFootball.PLAYER_IMAGE_HEIGHT //<- this is the value we possibly have to adjust, hence min max
+									)
+							)
+					);
+					blue_player.toFront();
+					blue_player.setVisible(true);
+					
+				}
+				
+				
+				
 				Edge edge = getEdge(ball, reachablePoint);
 				
-				edge.draw(main.player_turn());
-
-				ball.hideAvailableMoves();
-				ball.setBall(false);
 				
-				//set the Point p as the ball...
-				p.setBall(true);
-				//...and move the ball icon to p's position.
-				ball_game.setX(p.getCenterX() - 2.5 * PaperFootball.POINT_RADIUS);
-				ball_game.setY(p.getCenterY() - 2.5 * PaperFootball.POINT_RADIUS);
-				ball_game.toFront();
+				// the Duration of this Transition cannot be equal to the duration of Timeline moveSteps in PaperFootball
+				// because that leads to the computer being unable to perform multi-move turns - stops action but not turn after first move
+				TranslateTransition ball_transl = new TranslateTransition(new Duration(400), ball_game); 
+				ball_transl.setFromX(ball.getCenterX() - 2.5 * PaperFootball.POINT_RADIUS);
+				ball_transl.setFromY(ball.getCenterY() - 2.5 * PaperFootball.POINT_RADIUS);
+				ball_transl.setToX(p.getCenterX() - 2.5 * PaperFootball.POINT_RADIUS);
+				ball_transl.setToY(p.getCenterY() - 2.5 * PaperFootball.POINT_RADIUS);
 				
-				//move ends at an unused point -> turn ends.
-				if(p.unused()) {
+				ball_transl.setOnFinished(evt -> {
 					
-					p.put();
-					p.toFront();
+					//draw the Edge first, so the Points stay on top.
+					edge.draw(main.player_turn());
 					
+					//disable current Point highlights
+					ball.hideAvailableMoves();
 					
+					//change the location of the ball
+					ball.setBall(false);
+					p.setBall(true);
+					
+					//make sure ball icon stays on top
 					ball_game.toFront();
 					
-					//goal
-					if(p.pointModel().isGoal()) {
-						main.goal();
-					}
+					//hide both player images
+					red_player.setVisible(false);
+					blue_player.setVisible(false);
 					
-					//next turn
+					//move ends at an unused point -> turn ends.
+					if(p.unused()) {
+						
+						p.put();
+						p.toFront();
+						
+						
+						ball_game.toFront();
+						
+						//goal
+						if(p.pointModel().isGoal()) {
+							main.goal();
+						}
+						
+						//next turn
+						else {
+							Thread t = new Thread(new Runnable() {
+								
+								@Override
+								public void run() {
+									main.nextTurn();
+								}
+							});
+							t.start();
+						}
+						
+						//if the next player is human, display available moves by letting the Points blink.
+						boolean nextPlayerIsHuman = main.player(main.player_turn() % 2 + 1).isHuman(); 
+						if(nextPlayerIsHuman) p.showAvailableMoves();
+						
+						
+					}
+					//move ends on a used Point -> turn continues or choke.
 					else {
-						Thread t = new Thread(new Runnable() {
-							
-							@Override
-							public void run() {
-								main.nextTurn();
-							}
-						});
-						t.start();
+						//if the current player is human, show available moves by letting the Points blink.
+						boolean currentPlayerIsHuman = main.player(main.player_turn()).isHuman(); 
+						if(currentPlayerIsHuman) p.showAvailableMoves();
+						
 					}
+					//check if human player chocked (is unable to finish his turn)
+					if(p.reachablePointModels().length == 0) {
+						main.choke();
+					}
+
 					
-					//if the next player is human, display available moves by letting the Points blink.
-					boolean nextPlayerIsHuman = main.player(main.player_turn() % 2 + 1) instanceof Human; 
-					if(nextPlayerIsHuman) p.showAvailableMoves();
 					
-					
-				}
-				//move ends on a used Point -> turn continues or choke.
-				else {
-					//if the current player is human, show available moves by letting the Points blink.
-					boolean currentPlayerIsHuman = main.player(main.player_turn()) instanceof Human; 
-					if(currentPlayerIsHuman) p.showAvailableMoves();
-					
-				}
-				//check if human player chocked (is unable to finish his turn)
-				if(p.reachablePointModels().length == 0) {
-					main.choke();
-				}
+				});
+				
+				ball_transl.playFromStart();
 				
 				
 				return;
+				
 			}
 		}
+		
+	}
+	
+	public void continueToNextMove() {
 		
 	}
 	
@@ -314,14 +428,17 @@ public class View extends Group {
 		center.put();
 		center.setBall(true);
 		
-		ball_game.setX(center.getCenterX() - 2.5 * PaperFootball.POINT_RADIUS);
-		ball_game.setY(center.getCenterY() - 2.5 * PaperFootball.POINT_RADIUS);
+		ball_game.setX(0);
+		ball_game.setY(0);
+		
+		ball_game.setTranslateX(center.getCenterX() - 2.5 * PaperFootball.POINT_RADIUS);
+		ball_game.setTranslateY(center.getCenterY() - 2.5 * PaperFootball.POINT_RADIUS);
 		
 		ball_game.setVisible(true);
 		ball_game.toFront();
 		
 		//if the starting player is human show available Moves.
-		boolean startingPlayerIsHuman = (main.player(1) instanceof Human); 
+		boolean startingPlayerIsHuman = (main.player(1).isHuman()); 
 		if(startingPlayerIsHuman) center.showAvailableMoves();
 		
 	}
