@@ -9,12 +9,12 @@ import view.PaperFootball;
  * Mostly empty, since the human player will complete his turns by interacting with the GUI.
  * @author Michał Lipiński
  * @date 14.04.2017
- * @updated 14.07.2018 version 0.2
+ * @updated 10.09.2018 version 0.2.9a
  */
 public class Human extends Player {
 
 	public Human(int nr, PaperFootball main) {
-		super(nr, true, main);
+		super(nr, true, main, true);
 	}
 	
 	/**

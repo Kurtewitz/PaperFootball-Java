@@ -13,16 +13,21 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import model.Model;
+import multiplayer.Client;
+import multiplayer.ClientAdapter;
+import multiplayer.Server;
+import multiplayer.ServerAdapter;
+import player.Network;
 import player.Player;
 /**
  * Main class. JavaFX {@link Application}
  * @author Michał Lipiński
  * @date 10.04.2017
- * @updated 14.07.2018 version 0.2.2
+ * @updated 10.09.2018 version 0.2.9a
  */
 public class PaperFootball extends Application {
 	
-	public static final String _VERSION = "version 0.2.2";
+	public static final String _VERSION = "version 0.3";
 
 	//______________________Graphical Constants______________________
 	public static final double POINT_RADIUS = 5.0;
@@ -48,6 +53,12 @@ public class PaperFootball extends Application {
 	//____________________Graphical Constants End____________________
 	
 	
+	/** for hosting an online match */
+	private Server server;
+	
+	/** for joining an online match */
+	private Client client;
+	
 	/** Integer storing which player's turn it is (1 or 2) */
 	private int player_turn = 0;
 	
@@ -56,6 +67,12 @@ public class PaperFootball extends Application {
 	/** main View for a game */
 	private View v;
 	/** Menu to show at the start that let's the user chose the two player's for a game */
+	private OfflineGameSetup offlineGame;
+	/** Scene to show when player chooses to join an online match */
+	private JoinGame joinGame;
+	/** Scene to show when player chooses to host an online match */
+	private HostGame hostGame;
+	/** Menu lets you choose between playing offline, hosting or joining an online match */
 	private Menu menu;
 	
 	/** Player with the number 1 */
@@ -66,7 +83,7 @@ public class PaperFootball extends Application {
 	/** Stage to hold and display the graphical components of this application */
 	Stage stage;
 	
-	
+	ArrayList<int[]> turn = new ArrayList<int[]>();
 	
 	
 	public PaperFootball() {
@@ -75,12 +92,15 @@ public class PaperFootball extends Application {
 		
 		System.out.println(_VERSION);
 		
+		server = new Server(3161, new ServerAdapter(this));
+		
+		
 	}
 	
 	
 	/**
 	 * Set the two given players as the players of this game,
-	 * create a View for this game and statr the first turn.
+	 * create a View for this game and start the first turn.
 	 * @brief Start the game with the two given players.
 	 * @param player1
 	 * @param player2
@@ -104,8 +124,9 @@ public class PaperFootball extends Application {
 	
 	
 	/**
-	 * calculate the next turn = update value of turn_player, set the turn indicator
-	 * and if it's the AI's turn, calculate and animate the move
+	 * calculate the next turn = update value of turn_player and set the turn indicator.
+	 * If it's the AI's turn, calculate and animate the move.
+	 * If it's a {@link Network} player's turn, wait for his answer, //TODO doTurn needs to wait
 	 */
 	public void nextTurn() {
 		
@@ -119,32 +140,40 @@ public class PaperFootball extends Application {
 			}
 		});
 		
+		//if it's now a network player's turn, send him "my" (theoretically either Human's or AI's) turn
+		if (!player(player_turn).isLocal()) {
+			send(turn);
+		}
+		
 		
 		//create an empty turn, make it final so we can use it inside of an EventHandler
-		final ArrayList<int[]> turn = new ArrayList<int[]>();
+//		final ArrayList<int[]> turn = new ArrayList<int[]>();
+		turn.clear();
 		
 		//fill the turn with current player's moves
-		if(!player(player_turn).isHuman()) {
+		if(!player(player_turn).isHuman() || !player(player_turn).isLocal()) {
 			for(int[] move : player(player_turn).doTurn()) {
 				turn.add(move);
 			}
 		}
 		
+		
+		
 		//check 
-		if(!player(player_turn).isHuman() && turn.size() == 0) {
+		if( (!player(player_turn).isHuman() || !player(player_turn).isLocal()) && turn.size() == 0) {
 			System.out.println("Player" + player_turn + " chokes! Score so far " + player1().score() + " : " + player2().score());
 			choke();
 			System.out.println("New score " + player1().score() + " : " + player2().score());
 		}
 		
-		//show AI move one step at a time instead of all at once
+		//show opponent's move one step at a time instead of all at once
 		final Timeline moveSteps = new Timeline(new KeyFrame(Duration.millis(500), new EventHandler<ActionEvent>() {
 			
 			@Override
 			public void handle(ActionEvent event) {
 				if(turn.size() > 0) {
 					Point toClick = v.getPoint(turn.get(0)[0], turn.get(0)[1]);
-					toClick.click();
+					toClick.simulatedClick();
 					
 					turn.remove(0);
 				}
@@ -155,7 +184,8 @@ public class PaperFootball extends Application {
 		
 	}
 	
-	
+
+
 	/**
 	 * current player scores a goal = update current player's score and reset the field
 	 */
@@ -240,13 +270,30 @@ public class PaperFootball extends Application {
 		return null;
 	}
 	
+	/**
+	 * @return game server for hosting an online game
+	 */
+	public Server server() {
+		return server;
+	}
+	
+	/**
+	 * @return client for joining an online game
+	 */
+	public Client client() {
+		return client;
+	}
+	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 
 		stage = primaryStage;
 		
-		
+		offlineGame = new OfflineGameSetup(this);
+		hostGame = new HostGame(this);
+		joinGame = new JoinGame(this);
 		menu = new Menu(this);
+		
 		stage.setScene(new Scene(menu));
 
 		
@@ -254,8 +301,82 @@ public class PaperFootball extends Application {
 		
 	}
 	
+	/**
+	 * change the stage to join game screen.
+	 */
+	public void changeToJoinGame() {
+		stage.setScene(new Scene(joinGame));
+	}
+	
+	/**
+	 * change the stage to host game screen.
+	 */
+	public void changeToHostGame() {
+		stage.setScene(new Scene(hostGame));
+	}
+	
+	/**
+	 * change the stage to setup offline game screen.
+	 */
+	public void changeToOfflineGame() {
+		stage.setScene(new Scene(offlineGame));
+	}
+	
 	public static void main(String[] args) {
 		PaperFootball.launch();
+	}
+
+
+	/**
+	 * whenever a human player clicks on the screen during his turn,
+	 * although the events fire and the gameflow is pushed forward by the GUI,
+	 * we need to keep track of his/her turn,
+	 * so we can send it in case our opponent is playing over the network
+	 * @param from
+	 * @param to
+	 */
+	public void addMoveToPlayersTurn(Point from, Point to) {
+		// TODO Auto-generated method stub
+		// for now just add the to-point to turn.
+		turn.add(new int[] {to.pointModel().x(), to.pointModel().y()});
+	}
+	
+	
+	private void send(ArrayList<int[]> turn2) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	/**
+	 * Opponent connected to our hosted game.
+	 */
+	public void opponentConnected() {
+		// TODO Auto-generated method stub
+		hostGame.opponentConnected();
+	}
+
+
+	/**
+	 * Connect to the game server with the specified IP address
+	 * by simply creating a new Client
+	 * @param ip
+	 */
+	public void connectToServer(String ip) {
+		// TODO Auto-generated method stub
+		client = new Client(ip, 3161, new ClientAdapter(this));
+		
+	}
+
+
+	/**
+	 * Our {@link Client} has successfully connected to a hosted game server.
+	 */
+	public void connectedToServer() {
+		// TODO Auto-generated method stub
+		if(client.isConnected()) {
+			joinGame.connectionSuccessful();
+		}
 	}
 	
 

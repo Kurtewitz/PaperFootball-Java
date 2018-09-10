@@ -2,15 +2,17 @@ package player;
 
 import java.util.ArrayList;
 
+import model.LineModel;
 import model.Model;
+import model.PointModel;
 import view.PaperFootball;
 
 /**
  * Abstract class representing a player in the game storing some basic information, but lacking the crucial doTurn() method.
- * For actual implementations check the {@link Human} or more interestingly {@link AI} classes.
+ * For actual implementations check the {@link Human} or more interestingly {@link Network} or {@link AI} classes.
  * @author Michał Lipiński
  * @date 14.04.2017
- * @updated 14.07.2018 version 0.2
+ * @updated 10.09.2018 version 0.2.9a
  */
 public abstract class Player {
 
@@ -23,12 +25,15 @@ public abstract class Player {
 	/** is this Player human */
 	private final boolean isHuman;
 	
+	/** is this player playing on this machine or over network.*/
+	private final boolean local;
+	
 	/** this game's main class */
 	private final PaperFootball main;
 	/** this game's main model. Reset after every goal or choke. */
 	protected Model model;
 	
-	public Player(int nr, boolean isHuman, PaperFootball main) {
+	public Player(int nr, boolean isHuman, PaperFootball main, boolean local) {
 		
 		this.nr = nr;
 		score = 0;
@@ -38,7 +43,16 @@ public abstract class Player {
 		this.main = main;
 		model = main.model();
 		
+		this.local = local;
+		
 	}
+	
+	/**
+	 * calculate the bot's turn
+	 * @return ArrayList of integer arrays (each of length 2) representing the x and y coordinate of the points to be clicked
+	 */
+	public abstract ArrayList<int[]> doTurn();
+	
 	
 	/**
 	 * set this Player's score
@@ -52,7 +66,7 @@ public abstract class Player {
 	/** @return this Player's score */
 	public int score() {return score;}
 	
-	/** @return <code>true</code> if this Player is a human, <code>false</code> if this Player is a bot */
+	/** @return <code>true</code> if this Player is a human ({@link Human} or {@link Network}), <code>false</code> if this Player is a bot ({@link AI})*/
 	public boolean isHuman() {return isHuman;}
 	
 	/** update this Player's model to reflect the current state of the model of the main class (used for resetting after goal) */
@@ -60,10 +74,38 @@ public abstract class Player {
 		model = main.model();
 	}
 	
+	/** @return <code>true</code> if this Player is a local Player playing on this machine (instance of {@link AI} or {@link Human}), <code>false</code> if this Player is playing over network (instance of {@link Network})*/
+	public boolean isLocal() {
+		return local;
+	}
+	
+	
 	/**
-	 * calculate the bot's turn
-	 * @return ArrayList of integer arrays (each of length 2) representing the x and y coordinate of the points to be clicked
+	 * Convert an ArrayList of LineModel into a Turn
+	 * @param startingPoint the PointModel this Turn starts at
+	 * @param usedLines ArrayList of {@link LineModel}s used for this Turn
+	 * @return {@link Turn}
 	 */
-	public abstract ArrayList<int[]> doTurn();
+	public Turn convertToTurn(PointModel startingPoint, ArrayList<LineModel> usedLines) {
+		
+		Turn t = new Turn(this, model);
+		
+		PointModel currentPoint = startingPoint;
+		
+		for(LineModel l : usedLines) {
+			
+			if(l.from().equals(currentPoint)) {
+				t.addMove(new Move(currentPoint.x(), currentPoint.y(), l.to().x(), l.to().y()));
+				currentPoint = l.to();
+			}
+			else if(l.to().equals(currentPoint)) {
+				t.addMove(new Move(currentPoint.x(), currentPoint.y(), l.from().x(), l.from().y()));
+				currentPoint = l.from();
+			}
+		}
+		return t;
+	}
+	
+	
 	
 }

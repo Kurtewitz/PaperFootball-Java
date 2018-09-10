@@ -16,3 +16,8 @@ version 0.2.1 (14.07.2018)
 version 0.2.2 (14.07.2018)
 
 	- Fixed a bug where human player choking would reset the game like it should, but not count it towards the opposing player's score
+	
+version 0.2.9a (10.09.2018) (untested, committed for testing on second machine)
+
+	- Peer-to-Peer based online play.
+	- Disabled user input outside of "local human" player's turns.

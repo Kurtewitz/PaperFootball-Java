@@ -13,7 +13,7 @@ import model.PointModel;
  * Graphical representation of a simple clickable Point on the playing field or any of the clickable or nonclickable Points outlining the playing field.
  * @author Michał Lipiński
  * @date 10.04.2017
- * @updated 14.07.2018 version 0.2
+ * @updated 10.09.2018 version 0.2.9a
  */
 public class Point extends Circle {
 
@@ -63,6 +63,15 @@ public class Point extends Circle {
 	 * Someone or something clicked on this Point -> forward the call to the main GUI class
 	 */
 	public void click() {
+		//for this click to be valid it needs to be during a local human player's turn
+		boolean myTurn = v.main().player(v.main().player_turn()).isHuman() && v.main().player(v.main().player_turn()).isLocal();
+		if(myTurn && !p.isBall()) v.moveTo(this);
+	}
+	
+	/**
+	 * Because it's like a regular click on this Point, but without the checks if someone is clicking out of turn.
+	 */
+	public void simulatedClick() {
 		if(!p.isBall()) v.moveTo(this);
 	}
 	

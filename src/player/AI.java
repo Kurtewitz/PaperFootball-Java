@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import model.LineModel;
-import model.Model;
 import model.PointModel;
 import model.PointModel.Dir;
 import view.PaperFootball;
@@ -14,7 +13,7 @@ import view.PaperFootball;
  * For implementing a bot, check the doTurn() method
  * @author Michał Lipiński
  * @date 14.04.2017
- * @updated 14.07.2018 version 0.2
+ * @updated 10.09.2018 version 0.2.9a
  */
 public class AI extends Player {
 	
@@ -28,37 +27,13 @@ public class AI extends Player {
 	
 	public AI(int nr, int difficulty, PaperFootball main) {
 		
-		super(nr, false, main);
+		super(nr, false, main, true);
 		this.difficulty = difficulty;
 		
 		possibleTurns = new ArrayList<Turn>();
 	}
 	
-	/**
-	 * Convert an ArrayList of LineModel into a Turn
-	 * @param startingPoint the PointModel this Turn starts at
-	 * @param usedLines ArrayList<LineModel> of lines used for this Turn
-	 * @return Turn
-	 */
-	public Turn convertToTurn(PointModel startingPoint, ArrayList<LineModel> usedLines) {
-		
-		Turn t = new Turn(this, model);
-		
-		PointModel currentPoint = startingPoint;
-		
-		for(LineModel l : usedLines) {
-			
-			if(l.from().equals(currentPoint)) {
-				t.addMove(new Move(currentPoint.x(), currentPoint.y(), l.to().x(), l.to().y()));
-				currentPoint = l.to();
-			}
-			else if(l.to().equals(currentPoint)) {
-				t.addMove(new Move(currentPoint.x(), currentPoint.y(), l.from().x(), l.from().y()));
-				currentPoint = l.from();
-			}
-		}
-		return t;
-	}
+	
 	
 	
 	/**
@@ -333,8 +308,8 @@ public class AI extends Player {
 		//convert the chosen turn into a list of coordinates to click
 		ArrayList<int[]> pointsToClick = new ArrayList<int[]>();
 		
-		for(int i = 0 ; i < bestTurn.moves.size(); i++) {
-			pointsToClick.add(new int[]{bestTurn.moves.get(i).getToX(), bestTurn.moves.get(i).getToY()});
+		for(int i = 0 ; i < bestTurn.moves().size(); i++) {
+			pointsToClick.add(new int[]{bestTurn.moves().get(i).getToX(), bestTurn.moves().get(i).getToY()});
 		}
 		
 		return pointsToClick;
@@ -359,14 +334,14 @@ public class AI extends Player {
 				
 				Turn t = possibleTurns.get(i);
 				
-				int yDelta = bestTurn.p.nr() == 1 ? t.lastMove().getToY() - bestTurn.lastMove().getToY() : bestTurn.lastMove().getToY() - t.lastMove().getToY();
+				int yDelta = bestTurn.player().nr() == 1 ? t.lastMove().getToY() - bestTurn.lastMove().getToY() : bestTurn.lastMove().getToY() - t.lastMove().getToY();
 				
 				//difficulty 1 -> best move = northern/southern most ...
 				if (yDelta > 0){
 					bestTurn = t;
 				}
 				//... and with the shortest path
-				else if(yDelta == 0 && t.moves.size() < bestTurn.moves.size()) {
+				else if(yDelta == 0 && t.moves().size() < bestTurn.moves().size()) {
 					bestTurn = t;
 				}
 				
@@ -375,9 +350,9 @@ public class AI extends Player {
 			//look for equally good turns
 			for(Turn t : possibleTurns) {
 				
-				int yDelta = bestTurn.p.nr() == 1 ? t.lastMove().getToY() - bestTurn.lastMove().getToY() : bestTurn.lastMove().getToY() - t.lastMove().getToY();
+				int yDelta = bestTurn.player().nr() == 1 ? t.lastMove().getToY() - bestTurn.lastMove().getToY() : bestTurn.lastMove().getToY() - t.lastMove().getToY();
 				
-				if(yDelta == 0 && t.moves.size() == bestTurn.moves.size()) {
+				if(yDelta == 0 && t.moves().size() == bestTurn.moves().size()) {
 					bestTurns.add(t);
 				}
 			}
@@ -395,12 +370,12 @@ public class AI extends Player {
 				Turn t = possibleTurns.get(i);
 				
 				int tXGoal = Math.abs(4 - t.lastMove().getToX());
-				int tYGoal = bestTurn.p.nr() == 1 ? 12 - t.lastMove().getToY() : t.lastMove().getToY();
+				int tYGoal = bestTurn.player().nr() == 1 ? 12 - t.lastMove().getToY() : t.lastMove().getToY();
 				
 				int tGoalDelta = Math.max(tXGoal, tYGoal);
 				
 				int bestXGoal = Math.abs(4 - bestTurn.lastMove().getToX());
-				int bestYGoal = bestTurn.p.nr() == 1 ? 12 - bestTurn.lastMove().getToY() : bestTurn.lastMove().getToY();
+				int bestYGoal = bestTurn.player().nr() == 1 ? 12 - bestTurn.lastMove().getToY() : bestTurn.lastMove().getToY();
 				
 				int bestGoalDelta = Math.max(bestXGoal, bestYGoal);
 				
@@ -410,7 +385,7 @@ public class AI extends Player {
 					bestTurn = t;
 				}
 				//... and with the longest path
-				else if(tGoalDelta == bestGoalDelta && t.moves.size() >= bestTurn.moves.size() && 
+				else if(tGoalDelta == bestGoalDelta && t.moves().size() >= bestTurn.moves().size() && 
 						( (tXGoal == bestXGoal && tYGoal < bestYGoal) || (tYGoal == bestYGoal && tXGoal < bestXGoal)) ) {
 					bestTurn = t;
 				}
@@ -421,16 +396,16 @@ public class AI extends Player {
 			for(Turn t : possibleTurns) {
 				
 				int tXGoal = Math.abs(4 - t.lastMove().getToX());
-				int tYGoal = bestTurn.p.nr() == 1 ? 12 - t.lastMove().getToY() : t.lastMove().getToY();
+				int tYGoal = bestTurn.player().nr() == 1 ? 12 - t.lastMove().getToY() : t.lastMove().getToY();
 				
 				int tGoalDelta = Math.max(tXGoal, tYGoal);
 				
 				int bestXGoal = Math.abs(4 - bestTurn.lastMove().getToX());
-				int bestYGoal = bestTurn.p.nr() == 1 ? 12 - bestTurn.lastMove().getToY() : bestTurn.lastMove().getToY();
+				int bestYGoal = bestTurn.player().nr() == 1 ? 12 - bestTurn.lastMove().getToY() : bestTurn.lastMove().getToY();
 				
 				int bestGoalDelta = Math.max(bestXGoal, bestYGoal);
 			
-				if(tGoalDelta == bestGoalDelta && t.moves.size() == bestTurn.moves.size() && 
+				if(tGoalDelta == bestGoalDelta && t.moves().size() == bestTurn.moves().size() && 
 						( ( tXGoal == bestXGoal && tYGoal <= bestYGoal) || ( tYGoal == bestYGoal && tXGoal <= bestXGoal) ) ) {
 					bestTurns.add(t);
 				}
@@ -448,98 +423,6 @@ public class AI extends Player {
 		
 	}
 	
-	/**
-	 * This class is mostly a wrapper for a list of {@link Move}s representing a player's turn.
-	 * @author Michal
-	 *
-	 */
-	private class Turn {
-		
-		/** Model used for checking the validity of moves */
-		private Model m;
-		/** Player making this turn. */
-		private Player p;
-		
-		/** List of Moves */
-		private ArrayList<Move> moves;
-		
-		
-		Turn(Player p, Model m) {
-			this.m = m;
-			this.p = p;
-			
-			moves = new ArrayList<Move>();
-		}
-		
-		/**
-		 * Add a Move to this Turn
-		 * @param move Move to be added to the list of Moves for this Turn.
-		 * @return <code>true<code> if the Move has been successfully added, <br>
-		 * <code>false</code> otherwise
-		 */
-		public boolean addMove(Move move) {
-			LineModel l = m.getLine(move.getFromX(), move.getFromY(), move.getToX(), move.getToY());
-			if(l.unused()) {
-				moves.add(move);
-				
-				return true;
-			}
-			else return false;
-		}
-		
-		/**
-		 * @return the last Move of this Turn
-		 */
-		public Move lastMove() {
-			return moves.get(moves.size() - 1);
-		}
-
-		
-		
-		@Override
-		public boolean equals(Object o) {
-			return (o instanceof Turn) && ((Turn)o).lastMove().getToX() == lastMove().getToX() && ((Turn)o).lastMove().getToY() == lastMove().getToY();
-			
-		}
-
-//		@Override
-//		public int compareTo(Turn t) {
-//			return p.nr() == 1 ? lastMove().getToY() - t.lastMove().getToY() : t.lastMove().getToY() - lastMove().getToY();
-//		}
-		
-		
-	}
 	
-	/**
-	 * Class for storing a simple move from one Point to another. One ore more Moves make up a {@link Turn}
-	 * @author Michal
-	 *
-	 */
-	private class Move {
-		
-		private int toX;
-		private int toY;
-		
-		private int fromX;
-		private int fromY;
-		
-		public Move(int fromX, int fromY, int toX, int toY) {
-			
-			this.toX = toX;
-			this.toY = toY;
-			
-			this.fromX = fromX;
-			this.fromY = fromY;
-			
-		}
-
-		public int getToX() {return toX;}
-		public int getToY() {return toY;}
-		public int getFromX() {return fromX;}
-		public int getFromY() {return fromY;}
-		
-		
-		
-	}
 	
 }

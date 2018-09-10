@@ -20,7 +20,7 @@ import model.Model;
  * The main view class.
  * @author Michał Lipiński
  * @date 10.04.2017
- * @updated 14.07.2018 version 0.2.1
+ * @updated 10.09.2018 version 0.2.9a
  */
 public class View extends Group {
 
@@ -248,7 +248,7 @@ public class View extends Group {
 	 * <li> the target Point is the goal
 	 * @param p Point
 	 */
-	public void moveTo(Point p) {
+	public boolean moveTo(Point p) {
 		
 		Point ball = ball();
 		
@@ -256,6 +256,8 @@ public class View extends Group {
 		for(Point reachablePoint : ball.reachablePoints()) {
 			if(reachablePoint.equals(p)) {
 				
+
+				main.addMoveToPlayersTurn(ball, reachablePoint);
 				
 				//show image of red player kicking ball
 				if(main.player_turn() == 1) {
@@ -395,11 +397,11 @@ public class View extends Group {
 				
 				ball_transl.playFromStart();
 				
-				
-				return;
+				return true;
 				
 			}
 		}
+		return false;
 		
 	}
 	
