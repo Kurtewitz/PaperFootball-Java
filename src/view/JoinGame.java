@@ -11,12 +11,14 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import multiplayer.Server;
+import player.Human;
+import player.Network;
 
 /**
  * Screen allowing the player to enter an Invite Code and connect to an online game.
  * @author Michał Lipiński
  * @date 10.09.2018
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class JoinGame extends VBox {
 
@@ -100,7 +102,7 @@ public class JoinGame extends VBox {
 		start.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-//				startGame(); TODO
+				startGame();
 			}
 		});
 		start.setDisable(true);
@@ -131,6 +133,13 @@ public class JoinGame extends VBox {
 		
 	}
 	
+	/**
+	 * start a new online match with {@link Network} as Player1 and {@link Human} as Player2.
+	 */
+	protected void startGame() {
+		main.startGame(new Network(1, main),  new Human(2, main));
+	}
+
 	/**
 	 * Turn the Invite Code back into the IP address of the game server
 	 * @param inviteCode

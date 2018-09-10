@@ -20,9 +20,9 @@ import model.Model;
  * The main view class.
  * @author Michał Lipiński
  * @date 10.04.2017
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
-public class View extends Group {
+public class FootballField extends Group {
 
 	/** the main class */
 	private final PaperFootball main;
@@ -56,7 +56,7 @@ public class View extends Group {
 	private final RotateTransition rotateBall;
 	
 	
-	public View(Model m, PaperFootball pf) {
+	public FootballField(Model m, PaperFootball pf) {
 		super();
 		
 		/*this code comes from a short time when View extended Region instead of Group
@@ -71,25 +71,25 @@ public class View extends Group {
 		
 		ball_turn = new ImageView(
 				new Image(
-						View.class.getResourceAsStream("/ball.png"), 8 * PaperFootball.LINE_LENGTH / 10, 8 * PaperFootball.LINE_LENGTH / 10, true, true
+						FootballField.class.getResourceAsStream("/ball.png"), 8 * PaperFootball.LINE_LENGTH / 10, 8 * PaperFootball.LINE_LENGTH / 10, true, true
 						)
 				);
 		ball_game = new ImageView(
 				new Image(
-						View.class.getResourceAsStream("/ball.png"), 5 * PaperFootball.POINT_RADIUS, 5 * PaperFootball.POINT_RADIUS, true, true
+						FootballField.class.getResourceAsStream("/ball.png"), 5 * PaperFootball.POINT_RADIUS, 5 * PaperFootball.POINT_RADIUS, true, true
 						)
 				);
 		
 		//the 0.56 factor for the width comes from the fact, that the PNG has a width/height ratio of 0.56 and we want to preserve that, while making it as tall as a Line.
 		red_player = new ImageView(
 				new Image(
-						View.class.getResourceAsStream("/redplayer.png"), 0.56 * PaperFootball.PLAYER_IMAGE_HEIGHT, PaperFootball.PLAYER_IMAGE_HEIGHT, true, true
+						FootballField.class.getResourceAsStream("/redplayer.png"), 0.56 * PaperFootball.PLAYER_IMAGE_HEIGHT, PaperFootball.PLAYER_IMAGE_HEIGHT, true, true
 						)
 				);
 		//the 0.82 factor for the width comes from the fact, that the PNG has a width/height ratio of 0.82 and we want to preserve that, while making it as tall as a Line.
 		blue_player = new ImageView(
 				new Image(
-						View.class.getResourceAsStream("/blueplayer.png"), 0.82 * PaperFootball.PLAYER_IMAGE_HEIGHT, PaperFootball.PLAYER_IMAGE_HEIGHT, true, true
+						FootballField.class.getResourceAsStream("/blueplayer.png"), 0.82 * PaperFootball.PLAYER_IMAGE_HEIGHT, PaperFootball.PLAYER_IMAGE_HEIGHT, true, true
 						)
 				);
 		

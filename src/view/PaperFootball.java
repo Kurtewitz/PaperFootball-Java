@@ -23,11 +23,13 @@ import player.Player;
  * Main class. JavaFX {@link Application}
  * @author Michał Lipiński
  * @date 10.04.2017
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class PaperFootball extends Application {
 	
 	public static final String _VERSION = "version 0.3";
+	
+	public static final int _PORT = 3161;
 
 	//______________________Graphical Constants______________________
 	public static final double POINT_RADIUS = 5.0;
@@ -65,7 +67,7 @@ public class PaperFootball extends Application {
 	/** main Model for a game */
 	private Model m;
 	/** main View for a game */
-	private View v;
+	private FootballField footballField;
 	/** Menu to show at the start that let's the user chose the two player's for a game */
 	private OfflineGameSetup offlineGame;
 	/** Scene to show when player chooses to join an online match */
@@ -74,6 +76,8 @@ public class PaperFootball extends Application {
 	private HostGame hostGame;
 	/** Menu lets you choose between playing offline, hosting or joining an online match */
 	private Menu menu;
+	/** Since making a turn by interacting with the GUI directly changes the position of the ball, we need to keep track of it's position at the start of each turn to be able to send our turn over network*/
+	private int[] ballAtTurnStart;
 	
 	/** Player with the number 1 */
 	private Player Player1;
@@ -91,8 +95,6 @@ public class PaperFootball extends Application {
 		m = new Model();
 		
 		System.out.println(_VERSION);
-		
-		server = new Server(3161, new ServerAdapter(this));
 		
 		
 	}
@@ -112,12 +114,12 @@ public class PaperFootball extends Application {
 		Player1 = player1;//new AI(1, this);
 		Player2 = player2;//new AI(2, this);
 
-		v = new View(m, this);
-		v.prepareField();
+		footballField = new FootballField(m, this);
+		footballField.prepareField();
 		nextTurn();
 		
 
-		Scene scene = new Scene(v);
+		Scene scene = new Scene(footballField);
 		stage.setScene(scene);
 		
 	}
@@ -126,28 +128,27 @@ public class PaperFootball extends Application {
 	/**
 	 * calculate the next turn = update value of turn_player and set the turn indicator.
 	 * If it's the AI's turn, calculate and animate the move.
-	 * If it's a {@link Network} player's turn, wait for his answer, //TODO doTurn needs to wait
+	 * If it's a {@link Network} player's turn, wait for his answer, then act like it were a bot.
 	 */
 	public void nextTurn() {
 		
 		player_turn = player_turn % 2 + 1;
 		
+		
 		//show the turn indicator at current player's side (football icon)
 		Platform.runLater(new Runnable() {
 			@Override
 			public void run() {
-				v.setTurnIndicator(player_turn);
+				footballField.setTurnIndicator(player_turn);
 			}
 		});
 		
 		//if it's now a network player's turn, send him "my" (theoretically either Human's or AI's) turn
-		if (!player(player_turn).isLocal()) {
+		if (!player(player_turn).isLocal() && !turn.isEmpty()) {
 			send(turn);
 		}
 		
 		
-		//create an empty turn, make it final so we can use it inside of an EventHandler
-//		final ArrayList<int[]> turn = new ArrayList<int[]>();
 		turn.clear();
 		
 		//fill the turn with current player's moves
@@ -172,7 +173,7 @@ public class PaperFootball extends Application {
 			@Override
 			public void handle(ActionEvent event) {
 				if(turn.size() > 0) {
-					Point toClick = v.getPoint(turn.get(0)[0], turn.get(0)[1]);
+					Point toClick = footballField.getPoint(turn.get(0)[0], turn.get(0)[1]);
 					toClick.simulatedClick();
 					
 					turn.remove(0);
@@ -181,6 +182,9 @@ public class PaperFootball extends Application {
 		}));
 		moveSteps.setCycleCount(turn.size());
 		moveSteps.play();
+		
+		//store the ball's position once everything is finished for use as starting point of next turn
+		ballAtTurnStart = new int[] {ball()[0], ball()[1]};
 		
 	}
 	
@@ -200,11 +204,11 @@ public class PaperFootball extends Application {
 		Player2.updateModel();
 		
 
-		v = new View(m, this);
-		v.prepareField();
+		footballField = new FootballField(m, this);
+		footballField.prepareField();
 		nextTurn();
 		
-		stage.setScene(new Scene(v));
+		stage.setScene(new Scene(footballField));
 	}
 	
 	/**
@@ -223,11 +227,11 @@ public class PaperFootball extends Application {
 		Player2.updateModel();
 		
 
-		v = new View(m, this);
-		v.prepareField();
+		footballField = new FootballField(m, this);
+		footballField.prepareField();
 		nextTurn();
 		
-		stage.setScene(new Scene(v));
+		stage.setScene(new Scene(footballField));
 		
 	}
 	
@@ -261,6 +265,14 @@ public class PaperFootball extends Application {
 	}
 	
 	/**
+	 * @return int[2] with the x and y coordinate of the current position of the ball.
+	 * x Coordinate is under index 0, y coordinate under index 1.
+	 */
+	public int[] ball() {
+		return new int[] {footballField.ball().pointModel().x(), footballField.ball().pointModel().y()};
+	}
+	
+	/**
 	 * @param nr number of the player to be returned
 	 * @return Player1 or Player2
 	 */
@@ -284,14 +296,16 @@ public class PaperFootball extends Application {
 		return client;
 	}
 	
+	public static void main(String[] args) {
+		PaperFootball.launch();
+	}
+
+	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 
 		stage = primaryStage;
 		
-		offlineGame = new OfflineGameSetup(this);
-		hostGame = new HostGame(this);
-		joinGame = new JoinGame(this);
 		menu = new Menu(this);
 		
 		stage.setScene(new Scene(menu));
@@ -305,6 +319,7 @@ public class PaperFootball extends Application {
 	 * change the stage to join game screen.
 	 */
 	public void changeToJoinGame() {
+		joinGame = new JoinGame(this);
 		stage.setScene(new Scene(joinGame));
 	}
 	
@@ -312,6 +327,8 @@ public class PaperFootball extends Application {
 	 * change the stage to host game screen.
 	 */
 	public void changeToHostGame() {
+		openServer();
+		hostGame = new HostGame(this);
 		stage.setScene(new Scene(hostGame));
 	}
 	
@@ -319,13 +336,10 @@ public class PaperFootball extends Application {
 	 * change the stage to setup offline game screen.
 	 */
 	public void changeToOfflineGame() {
+		offlineGame = new OfflineGameSetup(this);
 		stage.setScene(new Scene(offlineGame));
 	}
 	
-	public static void main(String[] args) {
-		PaperFootball.launch();
-	}
-
 
 	/**
 	 * whenever a human player clicks on the screen during his turn,
@@ -336,15 +350,60 @@ public class PaperFootball extends Application {
 	 * @param to
 	 */
 	public void addMoveToPlayersTurn(Point from, Point to) {
-		// TODO Auto-generated method stub
 		// for now just add the to-point to turn.
-		turn.add(new int[] {to.pointModel().x(), to.pointModel().y()});
+		if(!from.equals(to)) turn.add(new int[] {to.pointModel().x(), to.pointModel().y()});
 	}
 	
 	
-	private void send(ArrayList<int[]> turn2) {
-		// TODO Auto-generated method stub
+	/**
+	 * Send this turn by delegating the call to either the {@link Client} or {@link Server}.
+	 * @param turn list of coordinates of points to click for this turn
+	 */
+	private void send(ArrayList<int[]> turn) {
+		//it is now Network player's turn...
+		//...if it's player 1's turn
+		if(player_turn() == 1) {
+			//... it means we joined an online game and use our client to send
+			client.send(generateMessage(turn));
+		}
+		//... otherwise we are hosting a game and use our server to send
+		else if(player_turn() == 2){
+			server.send(generateMessage(turn));
+		}
+	}
+
+
+	/**
+	 * Generate the message to be sent, which represents the given turn
+	 * @param turn List of coordinates of Points to click in order
+	 * @return String like "SE>S>SE>W>SE"
+	 */
+	private String generateMessage(ArrayList<int[]> turn) {
 		
+		String message = "";
+		
+		int currentX = ballAtTurnStart[0];
+		int currentY = ballAtTurnStart[1];
+		
+		
+		for(int[] toClick : turn) {
+			
+			
+			String longitude = "";
+			if(toClick[0] > currentX) longitude += "E";
+			else if(toClick[0] < currentX) longitude += "W";
+			
+			String latitude = "";
+			if(toClick[1] > currentY) latitude += "S";
+			else if(toClick[1] < currentY) latitude += "N";
+			
+			currentX = toClick[0];
+			currentY = toClick[1];
+			
+			message += latitude + longitude + ">";
+		}
+		
+		return message;
 	}
 
 
@@ -352,7 +411,6 @@ public class PaperFootball extends Application {
 	 * Opponent connected to our hosted game.
 	 */
 	public void opponentConnected() {
-		// TODO Auto-generated method stub
 		hostGame.opponentConnected();
 	}
 
@@ -363,9 +421,15 @@ public class PaperFootball extends Application {
 	 * @param ip
 	 */
 	public void connectToServer(String ip) {
-		// TODO Auto-generated method stub
-		client = new Client(ip, 3161, new ClientAdapter(this));
+		client = new Client(ip, _PORT, new ClientAdapter(this));
 		
+	}
+	
+	/**
+	 * Open a new {@link Server} to host an online game
+	 */
+	public void openServer() {
+		server = new Server(_PORT, new ServerAdapter(this));
 	}
 
 
@@ -373,10 +437,7 @@ public class PaperFootball extends Application {
 	 * Our {@link Client} has successfully connected to a hosted game server.
 	 */
 	public void connectedToServer() {
-		// TODO Auto-generated method stub
-		if(client.isConnected()) {
-			joinGame.connectionSuccessful();
-		}
+		joinGame.connectionSuccessful();
 	}
 	
 

@@ -9,10 +9,10 @@ import view.PaperFootball;
 
 /**
  * Abstract class representing a player in the game storing some basic information, but lacking the crucial doTurn() method.
- * For actual implementations check the {@link Human} or more interestingly {@link Network} or {@link AI} classes.
+ * For actual implementations check the {@link Human} or {@link Network} or more interestingly {@link AI} classes.
  * @author Michał Lipiński
  * @date 14.04.2017
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public abstract class Player {
 
@@ -29,7 +29,7 @@ public abstract class Player {
 	private final boolean local;
 	
 	/** this game's main class */
-	private final PaperFootball main;
+	protected final PaperFootball main;
 	/** this game's main model. Reset after every goal or choke. */
 	protected Model model;
 	
@@ -48,7 +48,8 @@ public abstract class Player {
 	}
 	
 	/**
-	 * calculate the bot's turn
+	 * Player's main method, depends on the subclass implementation, but generally speaking:
+	 * calculate a bot's turn, do nothing for a human player to make his turn by GUI interaction or wait to receive a player's turn over network
 	 * @return ArrayList of integer arrays (each of length 2) representing the x and y coordinate of the points to be clicked
 	 */
 	public abstract ArrayList<int[]> doTurn();

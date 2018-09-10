@@ -8,7 +8,7 @@ import javafx.scene.layout.HBox;
  * Menu allowing the user to choose between offline play, hosting a match or joining a match
  * @author Michał Lipiński
  * @date 10.09.2018
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class Menu extends HBox{
 

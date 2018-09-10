@@ -12,12 +12,14 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import multiplayer.Server;
+import player.Human;
+import player.Network;
 
 /**
  * Screen allowing the player to open a game lobby ({@link Server}) and wait for opponent to connect.
  * @author Michał Lipiński
  * @date 10.09.2018
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class HostGame extends VBox {
 
@@ -85,7 +87,7 @@ public class HostGame extends VBox {
 		start.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-//				startGame(); TODO
+				startGame();
 			}
 		});
 		start.setDisable(true);
@@ -138,5 +140,11 @@ public class HostGame extends VBox {
 		return main.server().getIp();
 	}
 	
+	/**
+	 * Start an online match with {@link Human} as Player1 and {@link Network} as Player2.
+	 */
+	public void startGame() {
+		main.startGame(new Human(1, main), new Network(2, main));
+	}
 	
 }

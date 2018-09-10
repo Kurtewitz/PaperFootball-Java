@@ -13,7 +13,7 @@ import view.PaperFootball;
  * For implementing a bot, check the doTurn() method
  * @author Michał Lipiński
  * @date 14.04.2017
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class AI extends Player {
 	

@@ -5,7 +5,7 @@ package player;
  * Class for storing a simple move from one point to another. One ore more Moves make up a {@link Turn}
  * @author Michał Lipiński
  * @date 14.04.2017
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class Move {
 	

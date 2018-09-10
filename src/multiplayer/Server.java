@@ -15,7 +15,7 @@ import java.util.ArrayList;
  * Basically a rip-off of https://github.com/TheDudeFromCI/WraithEngine/tree/5397e2cfd75c257e4d96d0fd6414e302ab22a69c/WraithEngine/src/wraith/library/Multiplayer
  * @author Michał Lipiński, TheDudeFromCI
  * @date 10.09.2018
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class Server{
 	
@@ -24,6 +24,8 @@ public class Server{
 	private ServerSocket ss;
 	private ServerListener serverListener;
 	private ArrayList<Socket> clients = new ArrayList<>();
+	/** Since a Server currently only needs to support one Client connection, we want to be able to send messages */
+	private PrintWriter out;
 	
 	public Server(int port, ServerListener listener){
 		
@@ -54,13 +56,13 @@ public class Server{
 									try{
 										clients.add(s);
 										BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-										PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+										out = new PrintWriter(s.getOutputStream(), true);
 										ClientInstance client = new ClientInstance(s.getInetAddress(), s.getPort());
 										serverListener.clientConnected(client, out);
 										
 										while(open){
 											try {
-												serverListener.recivedInput(client, in.readLine());
+												serverListener.receivedInput(client, in.readLine());
 											}
 											catch(IOException e) {
 												serverListener.clientDisconnected(client);
@@ -152,6 +154,17 @@ public class Server{
 				}catch(IOException e){ e.printStackTrace(); }
 				return;
 			}
+		}
+	}
+	
+	/**
+	 * Since our Server currently only connects with Client,
+	 * this method can be used to send messages directly to that one Client.
+	 * @param msg
+	 */
+	public void send(String msg) {
+		if(open) {
+			out.println(msg);
 		}
 	}
 }

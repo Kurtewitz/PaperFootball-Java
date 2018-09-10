@@ -24,7 +24,7 @@ import player.Player;
  * The menu displayed at the start that lets the player select the two players for a game and the difficulty of the computer player (if selected)
  * @author Michał Lipiński
  * @date 14.04.2017
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class OfflineGameSetup extends VBox {
 

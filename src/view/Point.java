@@ -13,14 +13,14 @@ import model.PointModel;
  * Graphical representation of a simple clickable Point on the playing field or any of the clickable or nonclickable Points outlining the playing field.
  * @author Michał Lipiński
  * @date 10.04.2017
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class Point extends Circle {
 
 	/** PointModel this Point represents */
 	private final PointModel p;
 	/** the parent / container */
-	private final View v;
+	private final FootballField v;
 	
 	/** FillTransition responsible for the blinking animation highlighting possible moves for human players */
 	private FillTransition blink;
@@ -30,7 +30,7 @@ public class Point extends Circle {
 	 * @param pm PointModel
 	 * @param v instance of the main GUI class so we can forward certain calls
 	 */
-	public Point(PointModel pm, View v) {
+	public Point(PointModel pm, FootballField v) {
 		super(PaperFootball.BUFFER_AROUND_FIELD + pm.x() * PaperFootball.LINE_LENGTH,
 				PaperFootball.BUFFER_AROUND_FIELD + pm.y() * PaperFootball.LINE_LENGTH,
 				PaperFootball.POINT_RADIUS);

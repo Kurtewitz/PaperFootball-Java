@@ -9,7 +9,7 @@ import model.Model;
  * This class is mostly a wrapper for a list of {@link Move}s representing a player's turn.
  * @author Michał Lipiński
  * @date 14.04.2017
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class Turn {
 	

@@ -1,12 +1,13 @@
 package multiplayer;
 
+import player.Network;
 import view.PaperFootball;
 
 /**
  * Implementation of {@link ClientListener}
  * @author Michał Lipiński
  * @date 10.09.2018
- * @updated 10.09.2018 version 0.2.9a
+ * @updated 10.09.2018 version 0.3
  */
 public class ClientAdapter implements ClientListener {
 	
@@ -29,10 +30,11 @@ public class ClientAdapter implements ClientListener {
 	}
 
 	@Override
-	public void recivedInput(String msg) {
+	public void receivedInput(String msg) {
 		// TODO Auto-generated method stub
-		System.out.println("received input " + msg);
-		
+		System.out.println("Client received input " + msg);
+		//since we are on the Client side, we know we joined an online game, but just to be sure...
+		if(!main.player(main.player_turn()).isLocal()) ((Network) main.player(main.player_turn()) ).messageReceived(msg);
 	}
 
 	@Override
