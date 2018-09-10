@@ -1,5 +1,6 @@
 package view;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -119,8 +120,14 @@ public class HostGame extends VBox {
 	 * Opponent connected to our server. Update status text and enable the start button.
 	 */
 	public void opponentConnected() {
-		player2Status.setText(_CONNECTED);
-		start.setDisable(false);
+		Platform.runLater(new Runnable() {
+
+			@Override
+			public void run() {
+				player2Status.setText(_CONNECTED);
+				start.setDisable(false);
+			}			
+		});
 	}
 	
 	/**
