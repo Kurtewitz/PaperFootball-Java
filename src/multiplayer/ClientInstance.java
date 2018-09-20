@@ -1,5 +1,6 @@
 package multiplayer;
 
+import java.io.PrintWriter;
 import java.net.InetAddress;
 
 /**
@@ -12,10 +13,12 @@ public class ClientInstance{
 	
 	public final InetAddress ip;
 	public final int port;
+	public final PrintWriter out;
 	
-	public ClientInstance(InetAddress ip, int port){
+	public ClientInstance(InetAddress ip, int port, PrintWriter out){
 		this.ip=ip;
 		this.port=port;
+		this.out = out;
 	}
 	
 	@Override

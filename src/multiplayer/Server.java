@@ -9,7 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Basically a rip-off of https://github.com/TheDudeFromCI/WraithEngine/tree/5397e2cfd75c257e4d96d0fd6414e302ab22a69c/WraithEngine/src/wraith/library/Multiplayer
@@ -23,16 +23,17 @@ public class Server{
 	private boolean open = true;
 	private ServerSocket ss;
 	private ServerListener serverListener;
-	private ArrayList<Socket> clients = new ArrayList<>();
-	/** Since a Server currently only needs to support one Client connection, we want to be able to send messages */
-	private PrintWriter out;
+	private HashMap<InetAddress, Socket> sockets = new HashMap<>();
+	private HashMap<InetAddress, ClientInstance> clients;
+	
 	
 	public Server(int port, ServerListener listener){
 		
 		serverListener=listener;
-		clients = new ArrayList<>();
+		sockets = new HashMap<>();
 		open = true;
-		try{
+		
+		try {
 			ss = new ServerSocket(port);
 			
 			if(this.port==0) {
@@ -54,10 +55,11 @@ public class Server{
 								
 								public void run(){
 									try{
-										clients.add(s);
+										sockets.put(s.getInetAddress(), s);
 										BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-										out = new PrintWriter(s.getOutputStream(), true);
-										ClientInstance client = new ClientInstance(s.getInetAddress(), s.getPort());
+										PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+										ClientInstance client = new ClientInstance(s.getInetAddress(), s.getPort(), out);
+										clients.put(s.getInetAddress(), client);
 										serverListener.clientConnected(client, out);
 										
 										while(open){
@@ -73,7 +75,8 @@ public class Server{
 													}
 												} catch(Exception exception) { exception.printStackTrace(); }
 												
-												clients.remove(s);
+												sockets.remove(s.getInetAddress());
+												clients.remove(s.getInetAddress());
 												return;
 											}
 										}
@@ -82,7 +85,8 @@ public class Server{
 									try { s.close();
 									} catch(Exception exception) { exception.printStackTrace(); }
 									
-									clients.remove(s);
+									sockets.remove(s.getInetAddress());
+									clients.remove(s.getInetAddress());
 								}
 							});
 							
@@ -114,7 +118,7 @@ public class Server{
 			e.printStackTrace();
 		}
 		
-		for(Socket s : clients){
+		for(Socket s : sockets.values()){
 			try{
 				s.close();
 			}
@@ -123,8 +127,10 @@ public class Server{
 			}
 		}
 		
+		sockets.clear();
+		sockets=null;
 		clients.clear();
-		clients=null;
+		clients = null;
 		ss=null;
 		serverListener.serverClosed();
 		serverListener=null;
@@ -143,28 +149,27 @@ public class Server{
 	}
 	
 	
-	public void kickClient(ClientInstance client){
-		Socket s;
-		for(int i = 0; i<clients.size(); i++){
-			s=clients.get(i);
-			if(client.ip==s.getInetAddress()&&s.getPort()==client.port){
-				try{
-					s.shutdownOutput();
-					s.close();
-				}catch(IOException e){ e.printStackTrace(); }
-				return;
+	public void kickClient(InetAddress ip){
+		Socket s = sockets.get(ip);
+		if(s != null) {
+			try {
+				s.shutdownOutput();
+				s.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
+		
 	}
 	
-	/**
-	 * Since our Server currently only connects with Client,
-	 * this method can be used to send messages directly to that one Client.
-	 * @param msg
-	 */
-	public void send(String msg) {
-		if(open) {
-			out.println(msg);
+	public void sendMessage(ClientInstance recipient, String message) {
+		if(recipient != null && message != null && message.length() > 0) {
+			
+			recipient.out.println(message);
+			
 		}
+		
 	}
+	
+	
 }

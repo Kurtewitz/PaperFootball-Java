@@ -55,8 +55,6 @@ public class PaperFootball extends Application {
 	//____________________Graphical Constants End____________________
 	
 	
-	/** for hosting an online match */
-	private Server server;
 	
 	/** for joining an online match */
 	private Client client;
@@ -283,13 +281,6 @@ public class PaperFootball extends Application {
 	}
 	
 	/**
-	 * @return game server for hosting an online game
-	 */
-	public Server server() {
-		return server;
-	}
-	
-	/**
 	 * @return client for joining an online game
 	 */
 	public Client client() {
@@ -326,8 +317,9 @@ public class PaperFootball extends Application {
 	/**
 	 * change the stage to host game screen.
 	 */
+	@Deprecated
 	public void changeToHostGame() {
-		openServer();
+//		openServer();
 		hostGame = new HostGame(this);
 		stage.setScene(new Scene(hostGame));
 	}
@@ -368,7 +360,8 @@ public class PaperFootball extends Application {
 		}
 		//... otherwise we are hosting a game and use our server to send
 		else if(player_turn() == 2){
-			server.send(generateMessage(turn));
+//			server.send(generateMessage(turn));
+			client.send(generateMessage(turn));
 		}
 	}
 
@@ -421,16 +414,13 @@ public class PaperFootball extends Application {
 	 * @param ip
 	 */
 	public void connectToServer(String ip) {
-		client = new Client(ip, _PORT, new ClientAdapter(this));
+		client = new Client("192.168.2.104:8000", _PORT, new ClientAdapter(this));
+
+		//TODO
+//		client = new Client(ip, _PORT, new ClientAdapter(this));
 		
 	}
 	
-	/**
-	 * Open a new {@link Server} to host an online game
-	 */
-	public void openServer() {
-		server = new Server(_PORT, new ServerAdapter(this));
-	}
 
 
 	/**

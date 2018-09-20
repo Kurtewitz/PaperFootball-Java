@@ -137,7 +137,7 @@ public class HostGame extends VBox {
 	 * @return Invite Code
 	 */
 	public String generateInviteCode() {
-		return main.server().getIp();
+		return "87.149.111.1";//main.server().getIp();
 	}
 	
 	/**
