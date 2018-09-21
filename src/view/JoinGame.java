@@ -6,11 +6,9 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
-import multiplayer.Server;
 import player.Human;
 import player.Network;
 
@@ -29,17 +27,16 @@ public class JoinGame extends VBox {
 	/** button starting a game with the chosen players */
 	private final Button start;
 	
-	/** button connecting to the lobby under specified Invite Code */
-	private final Button connect;
 	
-	/** For displaying an invite code for people to join your game */
-	private final TextArea inviteCode;
+	private final Button search;
+	
+	
 	/** Label for displaying the status of player. Whether he connected to your Game ({@link Server} or not */
 	private final Label connectionStatus;
 
 	
 	//__________String Constants__________
-	private final String _WAITING = "Enter an Invite Code and press Connect";
+//	private final String _WAITING = "Enter an Invite Code and press Connect";
 	private final String _CONNECTING = "Connecting...";
 	private final String _CONNECTED = "Connected to game. Click START";
 	
@@ -61,34 +58,22 @@ public class JoinGame extends VBox {
 		
 		
 		
+		search = new Button("Search for opponent");
+		search.setPrefHeight(1 * PaperFootball.LINE_LENGTH);
+		search.setPrefWidth(3 * PaperFootball.LINE_LENGTH);
+		search.setFont(new Font(22));
 		
-		Label player1Label = new Label("Enter Invite Code");
-		player1Label.setPrefHeight(1 * PaperFootball.LINE_LENGTH);
-		player1Label.setFont(new Font(20));
-		
-		
-		inviteCode = new TextArea();
-		inviteCode.setPrefHeight(1 * PaperFootball.LINE_LENGTH);
-		inviteCode.setPrefWidth(5 * PaperFootball.LINE_LENGTH);
-		inviteCode.setEditable(true);
-		inviteCode.setFont(new Font(20));
-		
-		connect = new Button("Connect");
-		connect.setPrefHeight(1 * PaperFootball.LINE_LENGTH);
-		connect.setPrefWidth(3 * PaperFootball.LINE_LENGTH);
-		connect.setFont(new Font(20));
-		
-		connect.setOnAction(new EventHandler<ActionEvent>() {
+		search.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				connect( inviteCodeToIP( inviteCode.getText() ) );
+				connect( inviteCodeToIP( "192.168.2.104:8000" ) );
 			}
-
-			
 		});
 
 		
-		connectionStatus = new Label(_WAITING);
+		
+		
+		connectionStatus = new Label(_CONNECTING);
 		connectionStatus.setPrefHeight(1 * PaperFootball.LINE_LENGTH);
 		connectionStatus.setFont(new Font(20));
 //		player2Status.setPrefWidth(3 * PaperFootball.LINE_LENGTH);
@@ -108,11 +93,6 @@ public class JoinGame extends VBox {
 		start.setDisable(true);
 		
 		
-		HBox player1Box = new HBox(PaperFootball.LINE_LENGTH);
-		player1Box.setPrefWidth(8 * PaperFootball.LINE_LENGTH);
-		player1Box.setAlignment(Pos.CENTER);
-		player1Box.setPadding(new Insets(0, 0, 0, 0));
-		player1Box.getChildren().addAll(inviteCode);
 		
 		HBox player2Box = new HBox(PaperFootball.LINE_LENGTH);
 		player2Box.setPrefWidth(8 * PaperFootball.LINE_LENGTH);
@@ -129,7 +109,7 @@ public class JoinGame extends VBox {
 		Label filler3 = new Label();
 		filler3.setPrefHeight(PaperFootball.LINE_LENGTH);
 		
-		getChildren().addAll(player1Label, player1Box, filler1, connect, player2Box, filler2, start, filler3);
+		getChildren().addAll(search, filler1, player2Box, filler2, start, filler3);
 		
 	}
 	
@@ -137,7 +117,15 @@ public class JoinGame extends VBox {
 	 * start a new online match with {@link Network} as Player1 and {@link Human} as Player2.
 	 */
 	protected void startGame() {
-		main.startGame(new Network(1, main),  new Human(2, main));
+		
+		
+		if (main.getMyPlayerNr() == 1) {
+			main.startGame(new Human(1, main),  new Network(2, main));
+		}
+		else if (main.getMyPlayerNr() == 2){
+			main.startGame(new Network(1, main),  new Human(2, main));
+		}
+		
 	}
 
 	/**
@@ -154,7 +142,6 @@ public class JoinGame extends VBox {
 	 * @param ip
 	 */
 	private void connect(String ip) {
-		connectionStatus.setText(_CONNECTING);
 		main.connectToServer(ip);
 	}
 	

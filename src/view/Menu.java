@@ -21,8 +21,6 @@ public class Menu extends HBox{
 	/** Button changes the screen to the join Game screen */
 	private final Button joinGame;
 	
-	/** Button changes the screen to the host Game screen */
-	private final Button hostGame;
 	
 	public Menu(PaperFootball main) {
 		super();
@@ -47,12 +45,8 @@ public class Menu extends HBox{
 			this.main.changeToJoinGame();
 		});
 		
-		hostGame = new Button("Host game");
-		hostGame.setOnAction(e -> {
-			this.main.changeToHostGame();
-		});
 		
-		this.getChildren().addAll(playOffline, joinGame, hostGame);
+		this.getChildren().addAll(playOffline, joinGame);
 	}
 	
 }

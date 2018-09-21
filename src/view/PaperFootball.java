@@ -15,8 +15,6 @@ import javafx.util.Duration;
 import model.Model;
 import multiplayer.Client;
 import multiplayer.ClientAdapter;
-import multiplayer.Server;
-import multiplayer.ServerAdapter;
 import player.Network;
 import player.Player;
 /**
@@ -70,8 +68,6 @@ public class PaperFootball extends Application {
 	private OfflineGameSetup offlineGame;
 	/** Scene to show when player chooses to join an online match */
 	private JoinGame joinGame;
-	/** Scene to show when player chooses to host an online match */
-	private HostGame hostGame;
 	/** Menu lets you choose between playing offline, hosting or joining an online match */
 	private Menu menu;
 	/** Since making a turn by interacting with the GUI directly changes the position of the ball, we need to keep track of it's position at the start of each turn to be able to send our turn over network*/
@@ -84,6 +80,9 @@ public class PaperFootball extends Application {
 	
 	/** Stage to hold and display the graphical components of this application */
 	Stage stage;
+	
+	/** When we connect to the server, it will respond with a 1 or 2 for the upcoming match */
+	private int myPlayerNrForOnline;
 	
 	ArrayList<int[]> turn = new ArrayList<int[]>();
 	
@@ -314,15 +313,6 @@ public class PaperFootball extends Application {
 		stage.setScene(new Scene(joinGame));
 	}
 	
-	/**
-	 * change the stage to host game screen.
-	 */
-	@Deprecated
-	public void changeToHostGame() {
-//		openServer();
-		hostGame = new HostGame(this);
-		stage.setScene(new Scene(hostGame));
-	}
 	
 	/**
 	 * change the stage to setup offline game screen.
@@ -400,13 +390,6 @@ public class PaperFootball extends Application {
 	}
 
 
-	/**
-	 * Opponent connected to our hosted game.
-	 */
-	public void opponentConnected() {
-		hostGame.opponentConnected();
-	}
-
 
 	/**
 	 * Connect to the game server with the specified IP address
@@ -414,10 +397,14 @@ public class PaperFootball extends Application {
 	 * @param ip
 	 */
 	public void connectToServer(String ip) {
-		client = new Client("192.168.2.104:8000", _PORT, new ClientAdapter(this));
 
 		//TODO
-//		client = new Client(ip, _PORT, new ClientAdapter(this));
+//		client = new Client("192.168.2.104", 8000, new ClientAdapter(this));
+		client = new Client("87.149.111.1", _PORT, new ClientAdapter(this));
+
+		client.send("OK");
+		System.out.println("OK has been sent");
+		
 		
 	}
 	
@@ -428,6 +415,21 @@ public class PaperFootball extends Application {
 	 */
 	public void connectedToServer() {
 		joinGame.connectionSuccessful();
+	}
+
+
+	/**
+	 * When connecting to the server for an online game, the server will respond with this client's playerNr.
+	 * We store it in the variable humanPlayerNrForOnline;
+	 * @param playerNr Integer [1 or 2] representing the order in which the client's joined the server.
+	 */
+	public void setMyPlayerNr(int playerNr) {
+		myPlayerNrForOnline = playerNr;
+	}
+	
+	
+	public int getMyPlayerNr() {
+		return myPlayerNrForOnline;
 	}
 	
 

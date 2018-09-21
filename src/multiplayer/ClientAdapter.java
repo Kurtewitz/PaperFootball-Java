@@ -33,8 +33,18 @@ public class ClientAdapter implements ClientListener {
 	public void receivedInput(String msg) {
 		// TODO Auto-generated method stub
 		System.out.println("Client received input " + msg);
+		
+		if(main.player_turn() == 0) {
+			System.out.println("Ich bin Player nr " + msg);
+			
+			int playerNr = Integer.parseInt(msg);
+			main.setMyPlayerNr(playerNr);
+			
+		}
+		
 		//since we are on the Client side, we know we joined an online game, but just to be sure...
-		if(!main.player(main.player_turn()).isLocal()) ((Network) main.player(main.player_turn()) ).messageReceived(msg);
+		
+		else if(!main.player(main.player_turn()).isLocal()) ((Network) main.player(main.player_turn()) ).messageReceived(msg);
 	}
 
 	@Override
