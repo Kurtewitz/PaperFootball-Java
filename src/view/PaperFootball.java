@@ -385,6 +385,7 @@ public class PaperFootball extends Application {
 			
 			message += latitude + longitude + ">";
 		}
+		message += "\n\n";
 		
 		return message;
 	}
@@ -402,7 +403,7 @@ public class PaperFootball extends Application {
 //		client = new Client("192.168.2.104", 8000, new ClientAdapter(this));
 		client = new Client("87.149.111.1", _PORT, new ClientAdapter(this));
 
-		client.send("OK");
+		client.send("OK\n\n");
 		System.out.println("OK has been sent");
 		
 		
