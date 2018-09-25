@@ -38,7 +38,8 @@ public class JoinGame extends VBox {
 	//__________String Constants__________
 //	private final String _WAITING = "Enter an Invite Code and press Connect";
 	private final String _CONNECTING = "Connecting...";
-	private final String _CONNECTED = "Connected to game. Click START";
+	private final String _CONNECTED = "Connected to server. Waiting for opponent...";
+	private final String _READY = "Opponent connected. Press Start.";
 	
 	
 	
@@ -150,6 +151,10 @@ public class JoinGame extends VBox {
 	 */
 	public void connectionSuccessful() {
 		connectionStatus.setText(_CONNECTED);
+	}
+	
+	public void opponentConnected() {
+		connectionStatus.setText(_READY);
 		start.setDisable(false);
 	}
 }

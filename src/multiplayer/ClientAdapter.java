@@ -35,11 +35,20 @@ public class ClientAdapter implements ClientListener {
 		System.out.println("Client received input " + msg);
 		
 		if(main.player_turn() == 0) {
-			System.out.println("Ich bin Player nr " + msg);
 			
-			int playerNr = Integer.parseInt(msg);
-			main.setMyPlayerNr(playerNr);
+			//GAMEREADY <111.222.333.444>    xxx.xxx.xxx.xxx = opponent IP
 			
+			if(msg.length() > 8 && msg.substring(0, 9).equals("GAMEREADY")) {
+				main.opponentConnected();
+				
+				System.out.println("Playing against " + msg.substring(msg.indexOf('<') + 1, msg.indexOf('>')));
+			}
+			else {
+				System.out.println("Ich bin Player nr " + msg);
+				
+				int playerNr = Integer.parseInt(msg);
+				main.setMyPlayerNr(playerNr);
+			}
 		}
 		
 		//since we are on the Client side, we know we joined an online game, but just to be sure...
