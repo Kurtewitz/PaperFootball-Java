@@ -400,10 +400,10 @@ public class PaperFootball extends Application {
 	public void connectToServer(String ip) {
 
 		//TODO
-//		client = new Client("192.168.2.104", 8000, new ClientAdapter(this));
+		client = new Client("192.168.2.104", 8000, new ClientAdapter(this));
 //		client = new Client("87.149.111.1", _PORT, new ClientAdapter(this));
 //		client = new Client("192.168.178.184", _PORT, new ClientAdapter(this));
-		client = new Client("192.168.178.20", 8000, new ClientAdapter(this));
+//		client = new Client("192.168.178.20", 8000, new ClientAdapter(this));
 
 		client.send("OK\n\n");
 		System.out.println("OK has been sent");

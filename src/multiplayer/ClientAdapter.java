@@ -41,7 +41,7 @@ public class ClientAdapter implements ClientListener {
 			if(msg.length() > 8 && msg.substring(0, 9).equals("GAMEREADY")) {
 				main.opponentConnected();
 				
-				System.out.println("Playing against " + msg.substring(msg.indexOf('<') + 1, msg.indexOf('>')));
+				System.out.println("Playing against " + msg.substring(msg.indexOf('[') + 1, msg.indexOf(']')));
 			}
 			else {
 				System.out.println("Ich bin Player nr " + msg);
